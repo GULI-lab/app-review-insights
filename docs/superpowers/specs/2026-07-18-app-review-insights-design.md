@@ -8,13 +8,13 @@ iOS App Store 评论分析平台：用户输入 App Store 链接 + 分析目标 
 
 | 层 | 技术选型 |
 |---|---------|
-| 前端 | React 19 + Vite + TypeScript |
+| 前端 | React 19 + Vite + TypeScript + shadcn/ui + ECharts |
 | 后端 | Python FastAPI |
 | 数据库 | SQLite (SQLAlchemy ORM) |
-| LLM | 抽象层设计 (支持 DeepSeek / OpenAI / Ollama 等) |
+| LLM | 抽象层设计 (默认 DeepSeek, 同时支持 OpenAI / Ollama) |
 | Agent 框架 | LangChain (ChatOpenAI 兼容封装) |
 | 实时通信 | SSE + 事件持久化 |
-| 数据采集 | Apple RSS Feed (默认) + 可选爬虫 + CSV/JSON 导入 |
+| 数据采集 | Apple RSS Feed (美区) + CSV/JSON 导入 |
 
 
 ## 要求
@@ -27,34 +27,28 @@ https://apps.apple.com/cn/app/workout-for-women-lose-weight/id839285684?see-all=
 ```
 ┌─────────────────────┐       SSE (实时进度 + 修订事件)    ┌──────────────────────────────────┐
 │   React + Vite      │ ◄─────────────────────────────── │    FastAPI Backend               │
-│   (Port 5173)        │       HTTP REST (CRUD)           │    (Port 8000)                   │
-│                      │ ───────────────────────────────► │                                  │
-│                      │                                  │   /api/analysis/start           │
-│                      │                                  │   /api/analysis/{id}            │
-│                      │                                  │   /api/analysis/{id}/stream     │
-│                      │                                  │     (重连时回放已持久化事件)      │
-│                      │                                  │   /api/analysis/{id}/conflicts  │
-│                      │                                  │     (人工确认/驳回断链)          │
-│                      │                                  │   /api/import                   │
-│                      │                                  │                                  │
-│                      │                                  │   Analysis Pipeline:            │
-│                      │                                  │    1. 链接验证 + 目标解析        │
-│                      │                                  │    2. 目标驱动的数据采集          │
-│                      │                                  │    3. 清洗去重 + 范围裁剪        │
-│                      │                                  │    4. 数据统计 + 局限性报告      │
-│                      │                                  │    5. AI Agent 分析             │
-│                      │                                  │    6. 证据评估 + 结论修订        │
-│                      │                                  │    7. 版本规划                  │
-│                      │                                  │    8. PRD 生成                  │
-│                      │                                  │    9. 测试用例生成              │
-│                      │                                  │    10. 溯源性验证 → 标记待审核  │
+│   shadcn/ui+ECharts │       HTTP REST (CRUD)           │    (Port 8000)                   │
+│   (Port 5173)       │ ───────────────────────────────► │                                  │
+│                     │                                  │   /api/analysis/start           │
+│                     │                                  │   /api/analysis/{id}            │
+│                     │                                  │   /api/analysis/{id}/stream     │
+│                     │                                  │     (重连时回放已持久化事件)      │
+│                     │                                  │   /api/import                   │
+│                     │                                  │                                  │
+│                     │                                  │   Analysis Pipeline:            │
+│                     │                                  │    1. 链接验证 + 目标解析(LLM)   │
+│                     │                                  │    2. RSS Feed 采集              │
+│                     │                                  │    3. 清洗去重 + 范围裁剪        │
+│                     │                                  │    4. 数据统计 + 局限性报告      │
+│                     │                                  │    5. AI Agent 分析 (LangChain) │
+│                     │                                  │    6. 证据评估 + 版本规划 + PRD  │
+│                     │                                  │    7. 测试用例生成               │
+│                     │                                  │    8. 溯源验证                   │
 └─────────────────────┘                                  └──────────┬───────────────────────┘
                                                                      │
                                                               ┌──────▼───────────────────────┐
                                                               │   SQLite                     │
                                                               │   + analysis_events (持久化)  │
-                                                              │   + conflicts (待审核标记)     │
-                                                              │   + sample_outputs/           │
                                                               │   + data/raw/ (缓存)          │
                                                               └──────────────────────────────┘
 ```
@@ -66,19 +60,26 @@ app-review-insights/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── AppInput.tsx            # 链接输入 + 分析目标 + 爬虫选项
-│   │   │   ├── ProgressPanel.tsx       # SSE 实时进度（含修订展示）
-│   │   │   ├── StageCard.tsx           # 单阶段卡片（状态/错误/修订标记）
-│   │   │   ├── ReviewTable.tsx         # 评论数据表格
-│   │   │   ├── FindingsView.tsx        # 分析发现（含置信度/局限性）
-│   │   │   ├── PrdView.tsx             # PRD 文档
-│   │   │   ├── ConflictPanel.tsx       # 人工确认/驳回面板 (NEW)
-│   │   │   └── TraceabilityView.tsx    # 溯源链可视化（含断链标记）
-│   │   ├── hooks/useSSE.ts
-│   │   ├── api/client.ts
-│   │   └── types/index.ts
+│   │   │   ├── ui/                    # shadcn/ui 组件
+│   │   │   ├── AppInput.tsx           # 链接输入 + 分析目标
+│   │   │   ├── ProgressPanel.tsx      # SSE 实时进度（含采集可视化）
+│   │   │   ├── StageCard.tsx          # 单阶段卡片（状态/错误）
+│   │   │   ├── ReviewTable.tsx        # 评论数据表格（分页/排序/搜索）
+│   │   │   ├── ReviewCharts.tsx       # ECharts 多维度可视化 (NEW)
+│   │   │   ├── FindingsView.tsx       # 分析发现（含置信度/局限性）
+│   │   │   ├── PrdView.tsx            # PRD 文档
+│   │   │   └── TestCasesView.tsx      # 测试用例
+│   │   ├── hooks/
+│   │   │   └── useSSE.ts             # SSE 连接 + 断线重连
+│   │   ├── api/
+│   │   │   └── client.ts             # REST API 客户端
+│   │   ├── types/
+│   │   │   └── index.ts              # TypeScript 类型定义
+│   │   └── App.tsx                    # 主页面布局（Tabs）
 │   ├── package.json
-│   └── vite.config.ts
+│   ├── vite.config.ts
+│   ├── tailwind.config.ts
+│   └── tsconfig.json
 ├── backend/
 │   ├── app/
 │   │   ├── main.py                     # FastAPI 入口 + SSE 路由
@@ -89,89 +90,39 @@ app-review-insights/
 │   │   │   └── schemas.py              # Pydantic
 │   │   ├── routers/
 │   │   │   ├── analysis.py             # 分析任务 API
-│   │   │   ├── conflicts.py            # 冲突管理 API (NEW)
 │   │   │   └── import_.py              # 数据导入 API
 │   │   ├── services/
-│   │   │   ├── scoper.py               # 目标解析 + 范围确定
+│   │   │   ├── scoper.py               # 目标解析 + 范围确定 (LLM)
 │   │   │   ├── collectors/
-│   │   │   │   ├── base.py             # 数据源抽象接口 (NEW)
-│   │   │   │   ├── rss.py              # RSS Feed 采集
-│   │   │   │   └── scraper.py          # 可选爬虫采集 (NEW)
+│   │   │   │   └── rss.py              # RSS Feed 采集
 │   │   │   ├── cleaner.py              # 清洗去重（规则驱动）
 │   │   │   ├── sampler.py              # LLM 上下文采样/分块
 │   │   │   ├── agent.py                # LangChain Agent 分析
 │   │   │   ├── planner.py              # 证据评估 + 版本规划 + PRD
 │   │   │   ├── testgen.py              # 测试用例生成
-│   │   │   └── validator.py            # 溯源性验证 → 标记待审核 (NEW)
+│   │   │   └── validator.py            # 溯源性验证
 │   │   ├── llm/
-│   │   │   ├── base.py                 # LLM 抽象基类 (NEW)
-│   │   │   └── factory.py              # LLM 工厂: 从配置创建实例 (NEW)
-│   │   ├── event_manager.py            # SSE 事件管理 + 持久化 (NEW)
-│   │   └── pipeline.py                 # 流水线编排 (NEW)
+│   │   │   ├── base.py                 # LLM 抽象基类
+│   │   │   └── factory.py              # LLM 工厂: 从配置创建实例
+│   │   ├── event_manager.py            # SSE 事件管理 + 持久化
+│   │   └── pipeline.py                 # 流水线编排
 │   ├── data/
 │   │   └── raw/                        # 原始数据缓存
 │   ├── requirements.txt
 │   └── .env.example
 ├── scripts/
-│   ├── fetch_sample_reviews.py         # 抓取示例 App 的真实评论，自动生成 sample_data/sample_reviews.json
-│   └── generate_sample_data.py         # 基于真评论运行精简流水线，产出 sample_outputs/
-├── sample_data/                        # 脚本运行时自动生成，不手动维护
-│   └── sample_reviews.json             # (由 fetch_sample_reviews.py 生成)
-├── sample_outputs/                     # 预置的完整分析结果（基于真实评论运行流水线产出）
-│   ├── README.md                       # 说明：这些结果是预计算的真实产出
-│   └── app_id839285684/
-│       ├── task_meta.json              # 分析任务元数据（goal, data_source, scope）
-│       ├── cleaned_reviews.json        # 清洗后评论
-│       ├── data_limitations.json       # 数据集局限性
-│       ├── findings.json               # 发现列表（含置信度/引文ID/矛盾证据）
-│       ├── prd.md                      # PRD 文档（需求可追溯到评论）
-│       ├── test_cases.json             # 测试用例（可追溯到需求和评论）
-│       ├── traceability_report.json    # 溯源验证报告
-│       └── revision_log.json           # 修订日志（如需人工确认则含冲突列表）
+│   └── fetch_sample_reviews.py         # 示例数据采集脚本
+├── demo/                               # 最小功能单元 demo
+│   ├── data/                           # demo 输出（被 .gitignore 排除）
+│   ├── rss_feed_demo.py
+│   ├── cleaner_demo.py
+│   ├── importer_demo.py
+│   ├── sampler_demo.py
+│   └── README.md
 └── README.md
 ```
 
-## 改进 1：数据源插件接口 + 可选爬虫
-
-### 数据源抽象层 (collectors/base.py)
-
-```python
-class DataSource(ABC):
-    """所有数据采集器的统一接口"""
-    @abstractmethod
-    async def fetch_reviews(self, app_id: str, max_count: int = 500) -> list[RawReview]:
-        pass
-    
-    @abstractmethod
-    def get_limitations(self) -> list[Limitation]:
-        """返回该数据源的已知局限性"""
-        pass
-```
-
-### 内置实现
-
-| 数据源 | 默认 | 上限 | 局限性 |
-|--------|------|------|--------|
-| RSS Feed | ✅ 默认选中 | 500 条 | 仅最近评论，内容可能截断 |
-| 爬虫 (Scraper) | ❌ 用户勾选启用 | 1000 条 | 需自行承担合规责任 |
-| CSV/JSON 导入 | ✅ 始终可用 | 无限制 | 依赖用户提供数据 |
-
-### 前端交互 (NEW)
-
-```
-┌─ Data Source ────────────────────────────────────┐
-│  ○ RSS Feed (快速, 最多 500 条)                    │
-│  ○ RSS + 爬虫 (采集更多历史评论, 最多 1000 条)     │
-│     ⚠ 爬虫模式需要遵守 Apple 服务条款, 请确认知情  │
-│  [📁 Import from File] 支持 JSON / CSV            │
-└──────────────────────────────────────────────────┘
-```
-
-- 默认仅使用 RSS Feed（零风险）
-- 用户可自愿勾选"启用爬虫"扩大数据量
-- 爬虫使用 `httpx` + 页面解析，遵守 robots.txt，限制速率
-
-## 改进 2：LLM 采样策略增强
+## 改进 1：LLM 采样策略增强
 
 ### 异常关键词预筛选 (NEW)
 
@@ -207,8 +158,7 @@ Block B (101-200): [Finding: UI is clean, Conf: medium]
     │   └── 若数量接近 → 标记为"用户意见分歧"
     └── 输出: 仲裁后的 unification_findings
 ```
-
-## 改进 3：LLM 抽象层 (llm/)
+## 改进 2（原改进 3）：LLM 抽象层
 
 ### base.py — 抽象基类
 
@@ -258,8 +208,7 @@ DEEPSEEK_BASE_URL=https://api.deepseek.com
 # 数据库
 DATABASE_URL=sqlite:///data/app_reviews.db
 ```
-
-## 改进 4：事件持久化 + SSE 断线重连
+## 改进 3（原改进 4）：事件持久化 + SSE 断线重连
 
 ### analysis_events 表 (NEW)
 
@@ -290,52 +239,57 @@ DATABASE_URL=sqlite:///data/app_reviews.db
     └── 回放结束后 → 切换为实时流
         (后续事件正常推送)
 ```
-
-## 改进 5：溯源验证 → 标记待审核 + 人工确认
+## 改进 4（原改进 5）：溯源验证 → 标记待审核
 
 ### 断链处理策略 (更新)
 
 | 检查 | 旧行为 | 新行为 |
 |------|--------|--------|
 | Finding → Review < 2 | 自动降级 | 标记为 `pending_review`，保留原置信度 |
-| Requirement ← Finding 缺失 | 自动移除 | 标记为 `pending_review`，放入冲突列表 |
+| Requirement ← Finding 缺失 | 自动移除 | 标记为 `pending_review`，放入降级列表 |
 | TestCase ← Requirement 缺失 | 自动移除 | 标记为 `pending_review` |
 | 需求无用户问题支撑 | 自动降级 | 标记为 `pending_review` |
 
-### conflicts 表 (NEW)
+## 改进 5（原改进 6）：评论数据可视化
 
-| 字段 | 类型 | 说明 |
+平台前端集成 ECharts 实现评论数据多维可视化。
+
+### 采集进度可视化
+
+当 RSS Feed 抓取中时，进度面板实时展示：
+- **采集进度条**：当前页数/总页数 + 百分比
+- **实时评分分布**：水平堆叠条形图，颜色编码（1星红→5星绿）
+- **采集详情**：当前页速度、已获总数、最新评论时间
+
+### 分析结果可视化（评论 Tab）
+
+| 图表 | 类型 | 说明 |
 |------|------|------|
-| id | int | 主键 |
-| task_id | str (FK) | |
-| entity_type | str | finding / requirement / test_case |
-| entity_id | int | |
-| check_type | str | traceability 检查类型 |
-| issue | str | 问题描述 |
-| suggested_action | str | 系统建议操作 |
-| user_action | enum | pending / confirmed / dismissed / revised |
-| created_at | datetime | |
+| 评分分布 | 柱状图 | 1-5星数量+占比，颜色分级 |
+| 评论时间趋势 | 折线图 | 按日/周聚合的评论变化曲线 |
+| 版本分布 | 环形图 | 各 App 版本评论占比 |
+| 评分×时间 | 热力图 | X轴=时间 Y轴=评分，颜色深=数量多 |
+| 评分分布 | 雷达图 | 各评分维度的分布形态 |
 
-### 前端 ConflictPanel (NEW)
+### 评论表格
 
-```
-┌─── Conflict Resolution ─────────────────────────┐
-│                                                  │
-│  ⚠ Finding #5 "订阅价格过高" 支撑不足           │
-│  系统建议: 降级为假设 (仅 1 条评论支撑)         │
-│  [确认降级] [保留并忽略] [查看源评论]            │
-│                                                  │
-│  ⚠ Requirement #3 "增加月度订阅选项" 无 Finding  │
-│  系统建议: 从 PRD 移除                          │
-│  [确认移除] [保留为假设性需求] [查看相关数据]    │
-│                                                  │
-│  剩余: 2 个待处理                               │
-└──────────────────────────────────────────────────┘
+- 分页（每页 20 条）
+- 点击评分柱联动筛选
+- 按时间/评分/投票排序
+- 点击展开全文（RSS 截断内容弹窗展示）
+- 关键词搜索
+
+## LLM Provider
+
+默认使用 DeepSeek，通过环境变量切换：
+
+```env
+LLM_PROVIDER=deepseek
+DEEPSEEK_API_KEY=sk-xxx
+DEEPSEEK_BASE_URL=https://api.deepseek.com
 ```
 
-**默认行为：** 分析完成后不自动删除，等用户确认后才执行操作。
-
-## 改进 6：基于真实评论的样本数据
+Provider 配置详见 [LLM 抽象层](#改进-2原改进-3llm-抽象层) 章节。
 
 ### 预采集的真实评论 (sample_data/)
 
@@ -382,7 +336,7 @@ Schema 变更时：
 | app_url | str | App Store URL |
 | app_id | str | 解析出的 app_id |
 | goal | str | 用户提供的分析目标 |
-| data_source | str | rss / scraper / import (NEW) |
+| data_source | str | rss / import |
 | parsed_scope | JSON | 从 goal 解析出的结构化范围 |
 | status | enum | pending/running/completed/failed |
 | progress_pct | int | 0-100 |
@@ -407,7 +361,7 @@ Schema 变更时：
 | id | int | 主键 |
 | task_id | str (FK) | 关联分析任务 |
 | review_id | str | App Store 评论 ID |
-| source | str | rss / scraper / import |
+| source | str | rss / import |
 | title | str | |
 | content | str | |
 | rating | int | 1-5 |
@@ -435,22 +389,9 @@ Schema 变更时：
 | is_model_generated | bool | 是否为 AI 生成 |
 | was_downgraded | bool | 是否被修订降级过 |
 | downgrade_reason | str | 降级原因 |
-| status | enum | approved / pending_review / dismissed (NEW) |
+| status | enum | approved / pending_review / dismissed |
 
-### conflicts (NEW)
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | int | 主键 |
-| task_id | str (FK) | |
-| entity_type | str | finding / requirement / test_case |
-| entity_id | int | |
-| check_type | str | |
-| issue | str | |
-| suggested_action | str | |
-| user_action | enum | pending / confirmed / dismissed / revised |
-| created_at | datetime | |
-
-### data_limitations
+### analysis_tasks 中 data_source 改为 rss / import### data_limitations
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | int | 主键 |
@@ -471,7 +412,7 @@ Schema 变更时：
 | version | str | v1/v2/v3 |
 | source_finding_ids | JSON | |
 | source_review_ids | JSON | |
-| status | enum | approved / pending_review / dismissed (NEW) |
+| status | enum | approved / pending_review / dismissed |
 
 ### test_cases
 | 字段 | 类型 | 说明 |
@@ -527,14 +468,7 @@ Schema 变更时：
 | 部分字段缺失 | 某些评分/版本字段可能缺失 | 缺失字段标记为 null，统计时排除 |
 | 请求频率限制 | 频繁请求可能被限流 | 指数退避重试，最大 3 次 |
 
-#### 2b. 可选爬虫 (collector_scraper.py, 用户勾选启用)
-
-- 使用 `httpx` + `selectolax` 解析 App Store 页面
-- 用户必须主动勾选"我已了解风险"才能启用
-- 默认上限 1000 条，速率限制 ≥ 2 秒/页
-- 失败时不阻断流程 → 降级回 RSS 结果
-
-#### 2c. CSV/JSON 导入 (import API)
+#### 2b. CSV/JSON 导入 (import API)
 
 - 始终可用，不受网络限制
 - 支持标准格式（字段映射在 README 中说明）
@@ -614,7 +548,7 @@ LangChain Agent + LLM 抽象层（不直接依赖 DeepSeek）。
 **Tools:**
 - `topic_discovery(reviews: list) → list[Topic]`
 - `evidence_gathering(topic: str, review_ids: list) → Evidence`
-- `contradiction_check(topic: str, reviews: list) → list[Conflict]`
+- `contradiction_check(topic: str, reviews: list) → list[Contradiction]`
 - `story_builder(findings: list) → Narrative`
 
 **Reflection 机制：**
@@ -646,7 +580,7 @@ Review ──→ Finding ──→ Requirement ──→ TestCase
 ```
 
 **断链处理策略（修改版）：**
-不再自动删除/降级，改为标记 `pending_review` + 写入 `conflicts` 表。
+不再自动删除/降级，改为标记 `pending_review`。
 
 | 检查 | 操作 | 
 |------|------|
@@ -655,7 +589,7 @@ Review ──→ Finding ──→ Requirement ──→ TestCase
 | TestCase ← Requirement 缺失 | 标记 `pending_review` |
 | 需求无用户问题支撑 | 标记 `pending_review`，建议降优先级 |
 
-前端 ConflictPanel 展示所有待处理项，用户可选择：确认 / 保留 / 驳回。
+日志记录降级信息。
 
 ### 8. SSE 进度流 + 事件持久化
 
@@ -673,8 +607,7 @@ Review ──→ Finding ──→ Requirement ──→ TestCase
 | 场景 | 策略 |
 |------|------|
 | 网络临时故障 | 自动重试 (3 次, 指数退避) |
-| RSS Feed 不可用 | 引导用户使用 CSV/JSON 导入 或 勾选爬虫 |
-| 爬虫失败 | 降级到 RSS，不阻断流程 |
+| RSS Feed 不可用 | 引导用户使用 CSV/JSON 导入 |
 | API Key 无效 | 明确提示配置问题 |
 | 数据不足 (< 5 条清洗后) | 全部结论低置信度，建议补充数据 |
 | LLM function calling 失败 | 降级纯 prompt + JSON mode |
@@ -695,7 +628,7 @@ Review ──→ Finding ──→ Requirement ──→ TestCase
 │  └─────────────────────────────────────────────────┘   │
 │  ┌─ Data Source ───────────────┬──────────────────┐   │
 │  │  ○ RSS Feed (默认, ≤500)    │ [📁 Import File] │   │
-│  │  ○ RSS + 爬虫 (≤1000)      │                  │   │
+│  │  [📁 Import File]
 │  └─────────────────────────────┴──────────────────┘   │
 │  [▶ Start Analysis]                                   │
 ├─┬─────────────────────────────────────────────────────┤
@@ -707,8 +640,8 @@ Review ──→ Finding ──→ Requirement ──→ TestCase
 │ │  ...                                                │
 │ │  ⚠ 修订: finding_5 置信度待审核                     │
 │ ├─────────────────────────────────────────────────────┤
-│ │  Results + Conflict Resolution                      │
-│ │  Tabs: [评论] [发现] [PRD] [测试] [溯源] [局限] ✋冲突│
+│ │  Results                                       │
+│ │  Tabs: [评论] [发现] [PRD] [测试] [溯源] [局限]             │
 │ │                                                     │
 │ │  ✋冲突 Tab (如有待处理):                            │
 │ │  ┌─────────────────────────────────────────────┐    │
@@ -721,15 +654,16 @@ Review ──→ Finding ──→ Requirement ──→ TestCase
 ## 验收标准
 
 1. ✅ 用户输入链接 + goal 后自动完成流水线
-2. ✅ 支持 RSS、爬虫、CSV/JSON 三种数据源（爬虫需用户确认）
+2. ✅ RSS Feed + CSV/JSON 导入两种数据源
 3. ✅ Goal 驱动数据采集范围
 4. ✅ 实时 SSE 进度 + 断线重连回放
-5. ✅ Agent 动态发现主题（非预定义分类）
-6. ✅ 高危关键词预筛防止遗漏关键 Bug
-7. ✅ 分块分析 + LLM 冲突仲裁
-8. ✅ LLM 抽象层，一键切换 DeepSeek / OpenAI / Ollama
-9. ✅ 溯源验证标记为待审核，用户可人工确认/驳回
-10. ✅ 全程报告数据局限性
-11. ✅ 支持 JSON/CSV 导入
-12. ✅ `sample_data/sample_reviews.json` 包含预抓取的真实评论，`sample_outputs/` 基于真实评论运行流水线产出，可离线审查推理链质量
-13. ✅ 前后端分离架构
+5. ✅ 采集过程可视化（进度条、实时评分分布）
+6. ✅ 评论数据多维图表（评分分布/时间趋势/版本分布/热力图）
+7. ✅ Agent 动态发现主题（非预定义分类）
+8. ✅ 高危关键词预筛防止遗漏关键 Bug
+9. ✅ 分块分析 + LLM 冲突仲裁
+10. ✅ LLM 抽象层，默认 DeepSeek
+11. ✅ 溯源验证标记为待审核
+12. ✅ 全程报告数据局限性
+13. ✅ 支持 JSON/CSV 导入
+14. ✅ 前后端分离架构

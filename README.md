@@ -1,90 +1,175 @@
-# LaienTech iOS App Review Analysis and Version Planning Assessment
+# App Review Insights
 
-## Background
+iOS App Store 评论智能分析平台。
 
-This assessment uses the following real iOS app as the primary development and demonstration example:
+## 系统架构
 
-https://apps.apple.com/us/app/workout-for-women-home-gym/id839285684
-
-If you have access to an overseas network environment, use the U.S. App Store link above. If not, and the U.S. link cannot be opened or redirects, use the China App Store link only to open the app detail page:
-
-https://apps.apple.com/cn/app/workout-for-women-home-gym/id839285684
-
-Regardless of which link is used to open the page, the review data used in this assessment must come from the U.S. App Store storefront.
-
-You are expected to complete a full product analysis workflow around App Store user reviews, covering data collection, review cleaning, review classification, issue analysis, version planning, PRD writing, and test case design. The final results should be presented through a runnable UI.
-
-This assessment focuses on the candidate's vibe coding ability. Candidates should use vibe coding to complete the full process: collecting data, cleaning and analyzing reviews, abstracting product requirements, planning versions, designing test cases, and productizing the analysis workflow into an interactive experience.
-
-## Objective
-
-Build a runnable tool or web application. In the UI, the user should be able to enter a valid U.S. App Store app link. Use the following link as the primary example:
-
-```text
-https://apps.apple.com/us/app/workout-for-women-home-gym/id839285684
+```
+前端 (React 19 + Vite + shadcn/ui + ECharts)  ←SSE实时→  后端 (FastAPI + SQLite + DeepSeek LLM)
+                                                                  │
+                                                          Apple RSS Feed (美区)
 ```
 
-The user should also be able to provide an analysis goal or constraint, such as focusing on subscription conversion, workout usability, a specific app version, or low-rating reviews. The system must not depend on app-specific hard-coded categories, findings, requirements, or test cases.
+## 技术栈
 
-After the user clicks "Start", the system should automatically complete the following workflow and display the results in the UI:
+| 层 | 技术选型 |
+|---|---------|
+| 前端 | React 19 + Vite + TypeScript + shadcn/ui + ECharts |
+| 后端 | Python FastAPI + SQLAlchemy + SQLite |
+| AI 分析 | LangChain Agent + DeepSeek LLM（可切换 OpenAI / Ollama） |
+| 数据采集 | Apple RSS Feed（美区） |
+| 实时通信 | SSE + 事件持久化（支持断线重连） |
 
-1. Determine the analysis scope based on the user's goal and the available data.
-2. Collect review data for the app.
-3. Clean, deduplicate, and structure the review data.
-4. Dynamically classify and analyze the reviews, rather than relying only on fixed keyword mappings or a predefined issue taxonomy.
-5. Evaluate whether the available evidence is sufficient, and identify conflicting feedback, uncertainty, and data limitations.
-6. Create an update plan based on the analysis, produce a PRD, and split the scope into multiple versions when necessary.
-7. Generate test cases based on the PRD, with each test case linked to its requirement and source user reviews.
-8. Validate the traceability chain from reviews to findings, requirements, and test cases. Unsupported conclusions must be removed, revised, or explicitly marked as assumptions.
-9. Display the execution progress in the UI, including the stages, intermediate results, validation results, errors, and revisions.
-10. Display the interim and final deliverables, including raw reviews, cleaned data, classification results, findings, PRD drafts, and test case drafts.
+## 快速开始
 
-## AI Requirements
+### 前置要求
 
-- At least one core semantic task must be model-driven. Suitable tasks include dynamic topic discovery, issue consolidation, evidence-grounded analysis, requirement generation, or test case generation. Implementing all semantic analysis only through fixed keywords, regular expressions, lookup tables, or manually predefined mappings does not meet this requirement.
-- Deterministic rules are encouraged where they are appropriate, including data collection, deduplication, field normalization, validation, and safety checks. The submission should explain why rules, statistical methods, or language models were chosen for each stage.
-- Every major finding must include its source review IDs or excerpts, supporting sample count, confidence or uncertainty, and any material conflicting evidence. Model-generated conclusions must remain distinguishable from deterministic statistics.
-- The submission must document the model and provider used, the main prompts or tool definitions, model configuration, failure-handling strategy, and measures used to reduce hallucinations and unsupported conclusions.
-- Hosted APIs, local models, or other model runtimes may be used. Secrets must be supplied through environment configuration and must not be committed to the repository.
+- Node.js 18+（前端）
+- Python 3.12+（后端）
+- uv（Python 包管理器）
 
-## Deliverables
+### 1. 启动后端
 
-Submit a GitHub project link and ensure the project can run locally.
+```bash
+cd backend
 
-The GitHub project should include complete source code, dependency configuration, running instructions, an explanation of the data collection method, and any necessary sample output or cached data so that interviewers can review the results even when external network access is unavailable. Cached results must be clearly labeled and must not replace the ability to process a previously unseen input when the required network and model configuration are available.
+# 创建虚拟环境并安装依赖
+uv venv .venv
+source .venv/Scripts/activate   # Windows
+# source .venv/bin/activate     # macOS/Linux
+uv pip install -r requirements.txt
 
-The application must also support importing review data from a documented JSON or CSV format. During evaluation, interviewers may provide a different valid App Store link, a previously unseen compatible review dataset, or a new analysis goal. The submission will be evaluated on whether it can produce grounded results without app-specific hard coding.
+# 配置环境变量（可选，不配置 LLM 分析阶段会跳过）
+cp .env.example .env
+# 编辑 .env，填入 DEEPSEEK_API_KEY
 
-The GitHub project should preserve a complete commit history to show the candidate's implementation process, iteration process, and use of vibe coding.
+# 启动服务器
+uvicorn app.main:app --port 8000
+```
 
-## Technical Requirements and Notes
+### 2. 启动前端
 
-- There is no restriction on the tech stack.
-- You may use frontend frameworks, backend frameworks, data analysis libraries, visualization libraries, natural language processing models, or large language model APIs.
-- You may use public APIs or third-party data collection libraries, but you must clearly explain the data source and its limitations.
-- Pay attention to request rate limits and avoid placing abnormal load on the target site.
-- Provide a sample environment file or equivalent configuration instructions, but do not include API keys or other secrets.
-- A non-runnable document-only submission is not acceptable.
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-## Evaluation Criteria
+### 3. 访问
 
-This assessment focuses on whether the candidate can turn real user reviews into an executable product plan. The evaluation will mainly consider:
+浏览器打开 `http://localhost:5173`
 
-- Whether the data is authentic and reproducible, with a clear explanation of its source and limitations.
-- Whether review cleaning, classification, and analysis are reasonable, and whether they surface concrete user problems.
-- Whether model-driven semantic analysis adds capability beyond fixed rules and generalizes to previously unseen reviews, apps, and analysis goals.
-- Whether findings distinguish evidence, deterministic statistics, model-generated conclusions, uncertainty, and conflicting feedback.
-- Whether the PRD is grounded in user problems, with clear requirement boundaries, priorities, and version planning.
-- Whether the test cases cover the PRD and can be traced back to the corresponding user reviews.
-- Whether the UI clearly presents the workflow and results, and whether the project can run locally with clear delivery instructions.
+输入 App Store 链接（如 `https://apps.apple.com/us/app/workout-for-women-home-gym/id839285684`），点击"开始分析"。
 
-## Important Notes
+## 功能模块
 
-- This is not merely a web scraping task, nor is it merely a UI presentation task.
-- The core challenge is to identify problems from real user reviews and turn them into executable product requirements and test plans.
-- Review data should not be collected by scraping only the visible content of the page. There are more appropriate ways to retrieve App Store review data; candidates are expected to explore them independently and explain their implementation.
-- Requirements in the PRD must be traceable to specific user reviews.
-- Test cases must be able to verify whether the corresponding requirements solve the problems raised in those reviews.
-- The use of an AI coding assistant during implementation does not by itself satisfy the AI requirements. The submitted application must demonstrate model-driven semantic analysis at runtime.
-- Interviewers may test the application with previously unseen data, mixed languages, duplicate or conflicting reviews, insufficient evidence, or temporary collection/model failures.
-- If the amount of available data is limited or data collection is constrained, state this transparently in the results. Do not fabricate data.
+### 数据采集
+- 来源：Apple RSS Feed API（美区 App Store）
+- 方式：分页抓取，每页 50 条，最多 10 页 = 500 条
+- 限流：每页间隔 ≥ 1.2 秒
+- 局限性：仅获取最近评论，内容可能被截断（在报告中标注）
+
+### 数据清洗（规则驱动）
+- 重复检测：同 author + 同 rating + 日期差 ≤ 3d + Jaccard 相似度 > 0.9
+- 无效过滤：< 5 字符 / 纯标点 / 纯 emoji / 纯数字 / 无意义词语
+- 隐私脱敏：邮箱 → [EMAIL]、电话 → [PHONE]
+- 质量评分：基于长度、有意义的词语、重复字符等
+
+### AI 分析
+- 框架：LangChain Agent + DeepSeek（可切换）
+- 动态主题发现：非预定义分类，LLM 从评论中自动发现
+- 证据评估：每个 finding 标注置信度（high/medium/low）
+- 矛盾检测：记录相反观点的评论
+- 溯源验证：Review → Finding → Requirement → TestCase 链
+
+### 数据导入
+- 支持 JSON/CSV 格式导入评论数据
+- POST `/api/import` 接口 + `task_id` 参数
+
+## 项目结构
+
+```
+app-review-insights/
+├── frontend/                    # React 前端
+│   ├── src/
+│   │   ├── components/          # UI 组件
+│   │   │   ├── ui/              # shadcn/ui 组件
+│   │   │   ├── AppInput.tsx     # 输入面板
+│   │   │   ├── ProgressPanel.tsx# SSE 进度面板（含实时图表）
+│   │   │   ├── StageCard.tsx    # 阶段卡片
+│   │   │   ├── ReviewTable.tsx  # 评论表格 + ECharts 多维度图表
+│   │   │   ├── FindingsView.tsx # AI 发现展示
+│   │   │   ├── PrdView.tsx      # PRD 文档
+│   │   │   └── TestCasesView.tsx# 测试用例
+│   │   ├── hooks/useSSE.ts      # SSE 连接 Hook
+│   │   ├── api/client.ts        # API 客户端
+│   │   └── types/index.ts       # TypeScript 类型
+│   └── ...
+├── backend/                     # FastAPI 后端
+│   ├── app/
+│   │   ├── main.py              # 入口 + 路由
+│   │   ├── config.py            # 环境配置
+│   │   ├── database.py          # 数据库连接
+│   │   ├── models/              # ORM + Pydantic
+│   │   ├── services/            # 业务逻辑
+│   │   │   ├── collectors/rss.py# RSS 采集
+│   │   │   ├── cleaner.py       # 清洗去重
+│   │   │   ├── sampler.py       # 采样/分块
+│   │   │   ├── agent.py         # LangChain Agent
+│   │   │   ├── planner.py       # 证据评估 + PRD
+│   │   │   ├── testgen.py       # 测试用例
+│   │   │   └── validator.py     # 溯源验证
+│   │   ├── llm/                 # LLM 抽象层
+│   │   ├── event_manager.py     # SSE 管理
+│   │   └── pipeline.py          # 流水线编排
+│   └── .env.example
+├── demo/                        # 最小功能单元 demo
+│   ├── rss_feed_demo.py         # RSS 采集
+│   ├── cleaner_demo.py          # 清洗去重
+│   ├── importer_demo.py         # 数据导入
+│   └── sampler_demo.py          # 分层抽样
+└── README.md
+```
+
+## 交付验证
+
+| 功能 | 状态 | 说明 |
+|------|------|------|
+| App Store 链接输入 | ✅ | 支持任意有效美区链接 |
+| RSS Feed 采集 | ✅ | 500 条真实评论 |
+| 数据清洗去重 | ✅ | 规则驱动，确定性 |
+| 采集进度可视化 | ✅ | SSE 实时推送 + ECharts 评分分布图 |
+| 评论多维图表 | ✅ | 评分分布/时间趋势/版本分布/热力图 |
+| 评论列表 | ✅ | 分页 + 星级筛选 + 关键词搜索 |
+| Agent AI 分析 | ✅ | LangChain + DeepSeek，动态发现主题 |
+| 证据评估 | ✅ | 置信度标注 + 矛盾检测 |
+| PRD 生成 | ✅ | Markdown 格式，版本规划 |
+| 测试用例生成 | ✅ | 关联需求和评论 |
+| CSV/JSON 导入 | ✅ | POST /api/import |
+| 断线重连 | ✅ | SSE since_id 回放 |
+| 中文界面 | ✅ | 全部中文标签和注释 |
+
+## 数据采集说明
+
+- **数据源**：Apple RSS Feed API（`https://itunes.apple.com/us/rss/customerreviews/page={page}/id={app_id}/sortby=mostrecent/json`）
+- **采集范围**：美区 App Store 评论
+- **上限**：500 条（10 页 × 50 条/页）
+- **官方接口**：Apple 提供的公共 RSS Feed，无需爬虫或逆向工程
+- **局限性**：
+  - 仅包含最近评论，无历史全量
+  - 超长评论可能被截断
+  - 超过 10 页后分页不稳定
+  - 在局限性报告中自动标注
+
+## 环境变量
+
+参考 `backend/.env.example`：
+
+```env
+LLM_PROVIDER=deepseek
+DEEPSEEK_API_KEY=sk-your-key-here
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DATABASE_URL=sqlite+aiosqlite:///data/app_reviews.db
+```
+
+不配置 API Key 时系统以 Mock 模式运行，LLM 分析阶段会跳过。
