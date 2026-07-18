@@ -1,0 +1,768 @@
+[
+  {
+    "id": 309,
+    "topic": "强制订阅与免费版功能受限",
+    "confidence": "high",
+    "description": "用户反馈免费版功能严重受限，大量内容被置于付费墙后，部分用户甚至无法使用已保存的免费训练，引发强烈不满。",
+    "supporting_review_ids": [
+      "14306466803",
+      "14303029084",
+      "14286721683",
+      "14279948531",
+      "14243194565",
+      "14270786563",
+      "14229833137",
+      "14174937162",
+      "14210920635"
+    ],
+    "sample_count": 9,
+    "representative_excerpts": [
+      "Now after recent update, it won’t let me do anything without a subscription.",
+      "EVERYTHING requires money, everything is behind a paywall.",
+      "All of a sudden I couldn’t access anything without paying an outrageous price.",
+      "Even workouts I had previously saved now ask you to pay. Ridiculous.",
+      "The app allows you to access almost everything at the start, and then begins to restrict.",
+      "the free version there are a lot of things that I can't do without paying"
+    ],
+    "contradicting_evidence": [
+      "14271423099 (5★): 'Worth the money really.'"
+    ],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 310,
+    "topic": "付费与计费问题：免费试用后立即扣费、误导性定价",
+    "confidence": "high",
+    "description": "多名用户声称免费试用后立即被扣费（如39.99美元/月或29.99美元），或认为年度订阅实际为月付，且取消订阅后仍被收费。",
+    "supporting_review_ids": [
+      "14297707993",
+      "14276064361",
+      "14204125134",
+      "14166078145",
+      "14222226181",
+      "14212862587",
+      "14221168828"
+    ],
+    "sample_count": 7,
+    "representative_excerpts": [
+      "discovered that it was 39.99 per month not 39.99 for the entire year. This was very misleading.",
+      "I was told in app that there would be no charge until the end of the free trial and you guys immediately charged me!",
+      "once I used the Apple Pay feature to subscribe to the free trial I was charged $29.99!?",
+      "Cancelled my subscription and then received not one but two charges in the same day totaling almost $100!!!",
+      "Cancelled subscription and still got charged for it."
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 311,
+    "topic": "客服/联系问题：无法成功联系客服、邮件被标记为垃圾邮件",
+    "confidence": "high",
+    "description": "用户试图联系支持团队时遭遇障碍，如邮件发送失败、被标记为垃圾邮件，或找不到账户管理入口，导致退款和账户问题无法解决。",
+    "supporting_review_ids": [
+      "14306466803",
+      "14291852699",
+      "14276064361",
+      "14212862587"
+    ],
+    "sample_count": 4,
+    "representative_excerpts": [
+      "Tried to contact and it said my email couldn’t be sent.",
+      "I’ve tried to message the company and it says my message seems like spam and my inquiry won’t be submitted.",
+      "kept getting flagged as 'spam'",
+      "went to contact support and every time I hit submit it would say the request couldn’t be submitted because it’s spam."
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 317,
+    "topic": "广告过多影响免费用户体验",
+    "confidence": "high",
+    "description": "大量用户抱怨免费版广告多且强制观看90秒广告，隐藏关闭按钮，严重影响体验，导致用户流失。",
+    "supporting_review_ids": [
+      "14013113694",
+      "14005886789",
+      "13976452003",
+      "13929492919",
+      "13925669942",
+      "13918913454",
+      "13912139472",
+      "13905434959"
+    ],
+    "sample_count": 8,
+    "representative_excerpts": [
+      "but they’re so excessively long, and hard to get out of. If you do it wrong, you have to watch the 90 sec long ad all over again.",
+      "How do you x out of ads? I have no idea.",
+      "They’ve hidden the X button so that when the 90s ad finishes, you can’t even get out of the ad without force closing the whole app.",
+      "now you have to watch a 90 second ad before EVERY workout unless you’d rather pay for premium.",
+      "Too many adds 90 seconds??? Too much.",
+      "to make it so we have to watch a three minute add before every. Single. Work out. Is completely unreasonable",
+      "But every time i try to get my workout in it’s always buy premium or watch a 90 second add."
+    ],
+    "contradicting_evidence": [
+      "很多5星评论并未提及广告问题，可能付费用户不受影响。但此处无正面评价广告的评论。"
+    ],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 318,
+    "topic": "免费试用误导与即时扣费",
+    "confidence": "high",
+    "description": "多位用户声称参与免费试用但立即被扣费，且难以联系客服退款，感觉被欺骗。",
+    "supporting_review_ids": [
+      "14019782684",
+      "13972381558",
+      "13956940768"
+    ],
+    "sample_count": 3,
+    "representative_excerpts": [
+      "I wanted to try the free week trial, and it said- “pay nothing now”, but I got charged $52.99 instantly for the year when that option was not even highlighted.",
+      "I only signed up for the free trial TODAY and was charged at the moment for a monthly subscription I never wanted.",
+      "App falsely claims to have a free trial but was charged immediately."
+    ],
+    "contradicting_evidence": [
+      "无"
+    ],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 319,
+    "topic": "订阅付费模式引发不满",
+    "confidence": "high",
+    "description": "用户抱怨原本免费的应用现在必须付费才能使用，或免费功能被严重限制，导致失望。",
+    "supporting_review_ids": [
+      "14013113694",
+      "13993531700",
+      "13989602330",
+      "13905365987",
+      "13957620564"
+    ],
+    "sample_count": 5,
+    "representative_excerpts": [
+      "It was actually free with little to no annoying ads... now they limit your free use now. You can’t even use this app for free more than a few days without them making you pay.",
+      "Got this app because it was free, now you have to pay for a subscription to do the exercises.",
+      "It looks like it has amazing workout... but you have to pay to subscribe.",
+      "Says it’s free, but it makes you go through a ton of steps, then gives you no way to continue without paying $40/yr.",
+      "love everything but the price ( used to be free)."
+    ],
+    "contradicting_evidence": [
+      "有正面评论认为付费值得，如ID 13910918951 说“It’s worth the money”"
+    ],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 321,
+    "topic": "训练效果与个性化好评",
+    "confidence": "high",
+    "description": "大量用户赞赏应用根据个人情况定制训练，有效且易坚持，适合各年龄段和健身水平。",
+    "supporting_review_ids": [
+      "14028794619",
+      "14028061237",
+      "14025441122",
+      "14024175667",
+      "16011481445",
+      "14002609717",
+      "13979925966",
+      "13962907165",
+      "13959060661",
+      "13947381326",
+      "13919694872",
+      "13910918951",
+      "13909060569",
+      "13900643414",
+      "13899881752"
+    ],
+    "sample_count": 15,
+    "representative_excerpts": [
+      "This app customizes your workouts based off needs, age, weight, and any struggles that you face.",
+      "I feel the progression I feel my body strengthening and I am confident about being able to maintain regular workouts.",
+      "It’s great because it shows you what to do and the workouts aren’t super long.",
+      "Quick workouts that really get you moving!",
+      "I’ve lost 16 pounds and kept them off.",
+      "This works! Moves look easy but they work for women!"
+    ],
+    "contradicting_evidence": [
+      "少数用户觉得强度不够：ID 14015893167 说“I really want my things be harder”"
+    ],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 325,
+    "topic": "广告过多影响用户体验",
+    "confidence": "high",
+    "description": "用户反映免费版本广告过多，需要观看90秒广告才能进行锻炼，且广告加载失败导致无法使用。多位用户表示曾经的免费内容现在被广告或付费墙限制，导致他们寻找替代应用。",
+    "supporting_review_ids": [
+      "13710553183",
+      "13641680745",
+      "13683663397",
+      "13645090120",
+      "13607353005",
+      "13634815950"
+    ],
+    "sample_count": 6,
+    "representative_excerpts": [
+      "now it’s nothing but ads and takes longer to get a workout in because of it.",
+      "Every one I’ve tried so far has gotten a pop-up “watch 90 seconds of ads to get this workout free!”",
+      "they have tons of ads or you gotta pay premium.",
+      "after watching a now required 90 sec AD the app often doesn’t load!",
+      "They've locked the basic workouts I used to do daily behind a paywall or a 90 second ad."
+    ],
+    "contradicting_evidence": [
+      "Even the free version is great. Keeps me consistent in bite size chunks."
+    ],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 326,
+    "topic": "付费订阅混乱与意外扣费",
+    "confidence": "high",
+    "description": "用户对订阅选项感到困惑，认为付费结构不清晰，而且免费试用后遭遇未经授权的扣费。多位用户声称被收取了年费，而他们只注册了免费试用。",
+    "supporting_review_ids": [
+      "13674784750",
+      "13651598086",
+      "13645528398",
+      "13614000308",
+      "13687534707",
+      "13685208047"
+    ],
+    "sample_count": 6,
+    "representative_excerpts": [
+      "I don’t love that there seem to be a zillion subscription options and no clear idea of what each is for.",
+      "Supposed to get a week free and got charged $49.99...",
+      "I tried to get the week trial and instead they charged me $50 for the year. V sneaky.",
+      "I was charged $42 when it said one week free trial. It charged me immediately.",
+      "So upset that I used this in high school and college for free & now of course there’s a subscription fee."
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 327,
+    "topic": "AI生成内容与质量下降",
+    "confidence": "high",
+    "description": "用户抱怨应用使用AI生成的图片和锻炼方案，认为之前真实模特和定制化的锻炼被移除。有用户指出起始问卷不影响实际锻炼。",
+    "supporting_review_ids": [
+      "13689172777",
+      "13607353005",
+      "13634815950"
+    ],
+    "sample_count": 3,
+    "representative_excerpts": [
+      "Do not waste your time or money. The exercise programs in this app have been completely AI generated. The quiz you take at the beginning does not affect the exercises you get.",
+      "they have absolutely ruined it all with blatantly AI-generated pictures. They used to use real models and real bodies, and now there is AI everywhere.",
+      "before all the ads & AI ruined the app."
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 330,
+    "topic": "订阅转化：免费版到付费版的阻力",
+    "confidence": "high",
+    "description": "多位用户提到曾经免费的功能现在需要付费，这让他们感到失望并离开。同时也有用户认为付费版有价值，但整体负面情绪集中在付费墙导致的转换阻力。",
+    "supporting_review_ids": [
+      "13687534707",
+      "13685208047",
+      "13683663397",
+      "13660845664",
+      "13641680745",
+      "13630047656",
+      "13634815950",
+      "13607353005"
+    ],
+    "sample_count": 8,
+    "representative_excerpts": [
+      "So upset that I used this in high school and college for free & now of course there’s a subscription fee.",
+      "Would love to try this app, but I need to pay when it’s suppose to be free.",
+      "YOU HAVE TO PAY FOR LITERALLY EVERYTHING!",
+      "you have to pay for every single thing.",
+      "They’re locking previously-free features behind paywalls and ads."
+    ],
+    "contradicting_evidence": [
+      "Even the free version is great.",
+      "Love the workouts in the paid app too."
+    ],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 331,
+    "topic": "强制订阅与广告体验问题",
+    "confidence": "high",
+    "description": "用户普遍抱怨免费版被强制要求观看长广告（尤其是90秒广告）才能解锁训练，且广告后无法正常返回训练，同时订阅模式被指责为‘贪心’和‘强迫付费’。",
+    "supporting_review_ids": [
+      "13356262116",
+      "13348702852",
+      "13326458365",
+      "13319341320",
+      "13303567783",
+      "13297190671",
+      "13292397140",
+      "13291958453",
+      "13289658165",
+      "13279496098",
+      "13276561838",
+      "13263119240",
+      "13256799761",
+      "13249718088",
+      "13240204611",
+      "13239553168"
+    ],
+    "sample_count": 16,
+    "representative_excerpts": [
+      "Meh- Used to be better now you need to watch ads for the free workouts which is fine but the ads are glitchy and you can’t always make it back to the workout.",
+      "I’ve used this app for years and I’m fine with watching ads. The only thing is that it says ‘watch 90 seconds of ads’ so I let the timer run for 90 seconds click x and it still has me watch it 2 or 3 more times.",
+      "This app used to be great until they started pushing a subscription model and forcing you to watch 90 second ads before each workout.",
+      "Update ruined it. I loved using this as a FREE app for workouts. Now they make you watch a 90 second add or pay. Lame.",
+      "Now you have to watch 2 minutes of ads for a 6 minute workout."
+    ],
+    "contradicting_evidence": [
+      "I paid for the 40 dollar yearly subscription and have no regrets. So much cheaper than a gym membership and feels similar to having a personal trainer.",
+      "Well worth the purchase!!"
+    ],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 332,
+    "topic": "订阅转化与定价争议",
+    "confidence": "high",
+    "description": "用户对订阅收费模式表示不满，特别是曾经免费的功能现在需要付费，或者免费试用期后立即扣费，导致用户流失。",
+    "supporting_review_ids": [
+      "13301960596",
+      "13300675774",
+      "13348702852",
+      "13319341320",
+      "13291958453",
+      "13248906839",
+      "13239553168"
+    ],
+    "sample_count": 7,
+    "representative_excerpts": [
+      "It charged me right away the full year subscription.",
+      "NOT FREE Don’t waste your time downloading the app and filling out the questions unless you’re okay with paying to use the app.",
+      "I think I’ve literally had this app for 7 or 8 years and loved it but won’t keep using it if it’s decided not to have at least some free workouts anymore."
+    ],
+    "contradicting_evidence": [
+      "I paid for the 40 dollar yearly subscription and have no regrets.",
+      "Well worth the purchase!!",
+      "I have a monthly I pay for it monthly and it’s just a very very good app."
+    ],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 335,
+    "topic": "正面体验：有效锻炼与习惯养成",
+    "confidence": "high",
+    "description": "许多用户称赞应用帮助养成锻炼习惯、有效减肥或保持身材，尤其适合初学者和忙碌人群。",
+    "supporting_review_ids": [
+      "13354022206",
+      "13353160740",
+      "13348553324",
+      "13326941249",
+      "13317780798",
+      "13306013356",
+      "13294006266",
+      "13289991767",
+      "13275776619",
+      "13257950903",
+      "13252986705",
+      "13242191965"
+    ],
+    "sample_count": 12,
+    "representative_excerpts": [
+      "Awesome Workout. This workout was just what I needed to get a quick morning sweat in.",
+      "This app has been helping me maintain my fitness for 6+ years. There’s so many options and even on days that you don’t feel like moving, there is something on here that can get you started!",
+      "These workouts have so far helped me lose 19 pounds.",
+      "I have not been an active person my entire life but this app has been a great habit builder for me."
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 336,
+    "topic": "订阅收费争议（免费试用后扣费）",
+    "confidence": "high",
+    "description": "多位用户反映在免费试用期结束后被自动扣费，即使提前取消订阅也被收费，导致不满和退款请求被拒。用户期望透明、公正的订阅机制。",
+    "supporting_review_ids": [
+      "13139617426",
+      "13126433304"
+    ],
+    "sample_count": 2,
+    "representative_excerpts": [
+      "Stole my money I wanted to try out the app and its benefits... It had a 7-day free trial and I had cancelled it before It was supposed to charge me, about 5 days beforehand. It charged me anyway.",
+      "Got charged immediately 43 dollars even though the app said would not be charged. Apple denied request to refund."
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 337,
+    "topic": "免费内容与付费墙的平衡",
+    "confidence": "high",
+    "description": "许多用户赞赏免费内容的质量，但也有用户对部分功能（如挑战、计划、新锻炼）需要付费表示失望或认为付费墙应更早提示。部分用户因付费墙放弃使用或降低评分。",
+    "supporting_review_ids": [
+      "13094968335",
+      "13099633329",
+      "13094496089",
+      "13078144290",
+      "13089449125",
+      "13123337236"
+    ],
+    "sample_count": 6,
+    "representative_excerpts": [
+      "Should mention the paywall before beginning the extensive surveys Just wasted my time giving them all my data and surveying about my personal goals just for a paywall to come up at the very end",
+      "the Free Stuff is Good!... I wish the programs and newer programs were available? Yeah. Am I going to drop them... No.",
+      "MAKE ALL OF THE Workout free... when I tried to do challenge 2 they want me to pay 29.99 or 19.99 and I’m not having it",
+      "Subscription Is used to be free. Reallt disapointed.",
+      "Love Wish it was cheaper but I’ll stick with free"
+    ],
+    "contradicting_evidence": [
+      "It’s a great app and well worth the money! I personally don’t mind paying for it",
+      "Very affordable, and offers many free options"
+    ],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 338,
+    "topic": "训练内容质量与多样性",
+    "confidence": "high",
+    "description": "用户普遍认可锻炼内容的质量，认为动作清晰、效果显著、适合各种需求（瑜伽、拉伸、力量等）。但部分用户希望增加特定内容，如哑铃锻炼、更多选择。",
+    "supporting_review_ids": [
+      "13137155519",
+      "13136769413",
+      "13114265365",
+      "13115558521",
+      "13101007031",
+      "13109480436",
+      "13109253292"
+    ],
+    "sample_count": 7,
+    "representative_excerpts": [
+      "The fact that they are short sessions makes it easier to complete on a regular basis. Also exercises are clearly instructed and shown.",
+      "I struggle with my body image and motivation to work out, the work outs are easy to Comprehend and they work the body well!",
+      "more workouts with dumbbells would be great",
+      "This is the first app that actually gets me sweaty in 7 minutes!"
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 340,
+    "topic": "低评分反馈汇总（1-2星）",
+    "confidence": "high",
+    "description": "低评分主要源于：自动扣费（免费试用后）、付费墙不透明、订阅后功能被移除、以及认为应用不再免费。用户感到被欺骗或不满。",
+    "supporting_review_ids": [
+      "13139617426",
+      "13126433304",
+      "13094968335",
+      "13078144290",
+      "13089449125",
+      "13090872118"
+    ],
+    "sample_count": 6,
+    "representative_excerpts": [
+      "Stole my money... It charged me anyway.",
+      "Just wasted my time giving them all my data and surveying about my personal goals just for a paywall",
+      "I hate it because you need a subscription to use it.",
+      "Ever since i subscribed... all of my favorite workouts have been deleted."
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 314,
+    "topic": "功能建议：增加年轻用户训练内容",
+    "confidence": "low",
+    "description": "用户建议为18岁以下青少年/儿童提供适合的训练计划。",
+    "supporting_review_ids": [
+      "14217181753"
+    ],
+    "sample_count": 1,
+    "representative_excerpts": [
+      "I do suggest getting younger ages below 18 because some girls who want to change and get a bit healthier in 6th grade or older can be a better version of themselves."
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "pending_review"
+  },
+  {
+    "id": 315,
+    "topic": "功能建议：增加新训练计划",
+    "confidence": "low",
+    "description": "长期用户希望开发者推出新的训练计划以保持新鲜感。",
+    "supporting_review_ids": [
+      "14220597773"
+    ],
+    "sample_count": 1,
+    "representative_excerpts": [
+      "I do wish they’d put out some new PROGRAMS, though I’m sure at some point they will."
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "pending_review"
+  },
+  {
+    "id": 316,
+    "topic": "功能建议：允许免费版下载内容",
+    "confidence": "low",
+    "description": "用户反映即使付费订阅也无法下载训练内容，希望获得下载功能。",
+    "supporting_review_ids": [
+      "14249980354"
+    ],
+    "sample_count": 1,
+    "representative_excerpts": [
+      "Even with a paid subscription, you cannot download."
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "pending_review"
+  },
+  {
+    "id": 322,
+    "topic": "功能建议：增加更多腹部训练",
+    "confidence": "low",
+    "description": "有用户希望增加更多腹部和核心训练内容。",
+    "supporting_review_ids": [
+      "13900643414"
+    ],
+    "sample_count": 1,
+    "representative_excerpts": [
+      "I would like to continue with this app and I would hope there was more abs and abdominal work."
+    ],
+    "contradicting_evidence": [
+      "无"
+    ],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "pending_review"
+  },
+  {
+    "id": 323,
+    "topic": "数据同步与Apple Watch兼容性问题",
+    "confidence": "low",
+    "description": "用户遇到换新手机后数据未同步，以及Apple Watch Series 11无法正确记录运动的问题。",
+    "supporting_review_ids": [
+      "13906711712"
+    ],
+    "sample_count": 1,
+    "representative_excerpts": [
+      "just got a new phone and none of the data loaded to my new device... Also got an Apple Watch series 11 and cannot figure out how to get the watch to register my work outs as exercise."
+    ],
+    "contradicting_evidence": [
+      "无"
+    ],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "pending_review"
+  },
+  {
+    "id": 324,
+    "topic": "订阅访问问题",
+    "confidence": "low",
+    "description": "有用户无法访问已购买的订阅，可能涉及技术问题。",
+    "supporting_review_ids": [
+      "14000557160"
+    ],
+    "sample_count": 1,
+    "representative_excerpts": [
+      "Unable to access paid subscription"
+    ],
+    "contradicting_evidence": [
+      "无"
+    ],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "pending_review"
+  },
+  {
+    "id": 329,
+    "topic": "同步问题与客服无响应",
+    "confidence": "low",
+    "description": "用户反映无法在设备间同步锻炼进度，且多次联系开发者未获回应。",
+    "supporting_review_ids": [
+      "13674784750"
+    ],
+    "sample_count": 1,
+    "representative_excerpts": [
+      "I can’t get the workouts to sync between my phone and ipad. ... I have reached out multiple times to the app developer ... and have gotten no response."
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "pending_review"
+  },
+  {
+    "id": 334,
+    "topic": "应用稳定性与技术支持响应慢",
+    "confidence": "low",
+    "description": "用户遇到登录问题，联系支持团队未获回应，影响体验。",
+    "supporting_review_ids": [
+      "13323395831"
+    ],
+    "sample_count": 1,
+    "representative_excerpts": [
+      "If I could get a response from the 7m fitness I would give them a 5. I contacted them about a login problem and have not heard anything."
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "pending_review"
+  },
+  {
+    "id": 312,
+    "topic": "应用内广告问题：广告干扰用户体验",
+    "confidence": "medium",
+    "description": "用户反映广告弹出频繁，甚至导致应用关闭并打开网页，严重干扰训练过程。",
+    "supporting_review_ids": [
+      "14277925854",
+      "14279948531",
+      "14210920635"
+    ],
+    "sample_count": 3,
+    "representative_excerpts": [
+      "the app will close and the Shein website will open and this will happen multiple times without you prompting",
+      "required 90sec ads to do workouts",
+      "I do not care if I have to watch ads but what I do care about is if I get a pop up screen with no continuation option only advertising the paid version."
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 313,
+    "topic": "账号登录/订阅同步问题",
+    "confidence": "medium",
+    "description": "用户付费订阅后无法登录账户，或登录后无法访问已购买的 workouts 和权益。",
+    "supporting_review_ids": [
+      "14291852699",
+      "14246967026"
+    ],
+    "sample_count": 2,
+    "representative_excerpts": [
+      "I cannot log into app I paid for a year membership and I cannot log into the account because it says it does not exist.",
+      "I was logged out of the app recently and cannot log back in to access my workouts and benefits of my paid subscription"
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 320,
+    "topic": "AI内容质量下降",
+    "confidence": "medium",
+    "description": "有长期付费用户指出工作内容变成AI生成，质量差，动作指导不一致。",
+    "supporting_review_ids": [
+      "13903573997"
+    ],
+    "sample_count": 1,
+    "representative_excerpts": [
+      "most of the workouts are just AI slop now. the work outs themselves are barely even work outs, the guiding voice is telling you to do one thing while the AI diagram is doing another."
+    ],
+    "contradicting_evidence": [
+      "多数评论仍肯定工作质量，可能是个别案例。"
+    ],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "pending_review"
+  },
+  {
+    "id": 328,
+    "topic": "功能建议：音乐选择与热身",
+    "confidence": "medium",
+    "description": "用户希望恢复Apple Music音乐选择功能，并建议增加更多热身或拉伸环节。",
+    "supporting_review_ids": [
+      "13705264512",
+      "13704011317"
+    ],
+    "sample_count": 2,
+    "representative_excerpts": [
+      "But my music no longer works. You can’t choose Apple Music anymore.",
+      "I would have loved to see a bit more stretching or a warm-up incorporated prior to starting the workout."
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 333,
+    "topic": "功能建议：语音提示与孕期内容改进",
+    "confidence": "medium",
+    "description": "用户希望增加语音提示（如倒计时、动作提醒），以及改进孕期训练内容，避免对孕妇不安全的动作（如俯卧动作）。",
+    "supporting_review_ids": [
+      "13286847331",
+      "13326180802"
+    ],
+    "sample_count": 2,
+    "representative_excerpts": [
+      "It’d be great if EVERY workout had the verbal prompts to indicate when a move is half done and to count down to the end of the move.",
+      "Tell me why their prenatal workouts/yoga have you laying on your stomach doing single leg raises or supermans... like wouldn’t they know that pregnant women shouldn’t be putting pressure on your stomach??"
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  },
+  {
+    "id": 339,
+    "topic": "应用功能问题与改进建议",
+    "confidence": "medium",
+    "description": "部分用户反映应用功能问题，如订阅后喜爱的锻炼被删除、多设备兼容性问题、动画与实际动作不符等。建议改善客户服务（电话/实时聊天）和功能稳定性。",
+    "supporting_review_ids": [
+      "13090872118",
+      "13062725694",
+      "13094908505"
+    ],
+    "sample_count": 3,
+    "representative_excerpts": [
+      "Ever since i subscribed to the app all of my favorite workouts have been deleted. I am no longer able to select the individual workouts.",
+      "I can’t get it to work on my iPad... I’ve reached out to customer support and thus far only received automated messages.",
+      "though sometimes the names and animations of the exercises don’t match."
+    ],
+    "contradicting_evidence": [],
+    "is_statistical": false,
+    "is_model_generated": true,
+    "status": "approved"
+  }
+]

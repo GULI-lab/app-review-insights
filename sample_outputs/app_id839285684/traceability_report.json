@@ -1,0 +1,69 @@
+{
+  "checked": 32,
+  "pending": 9,
+  "pending_items": [
+    {
+      "id": 314,
+      "topic": "功能建议：增加年轻用户训练内容",
+      "confidence": "low",
+      "sample_count": 1,
+      "downgrade_reason": "支撑评论不足(1条)"
+    },
+    {
+      "id": 315,
+      "topic": "功能建议：增加新训练计划",
+      "confidence": "low",
+      "sample_count": 1,
+      "downgrade_reason": "支撑评论不足(1条)"
+    },
+    {
+      "id": 316,
+      "topic": "功能建议：允许免费版下载内容",
+      "confidence": "low",
+      "sample_count": 1,
+      "downgrade_reason": "支撑评论不足(1条)"
+    },
+    {
+      "id": 320,
+      "topic": "AI内容质量下降",
+      "confidence": "medium",
+      "sample_count": 1,
+      "downgrade_reason": "支撑评论不足(1条)"
+    },
+    {
+      "id": 322,
+      "topic": "功能建议：增加更多腹部训练",
+      "confidence": "low",
+      "sample_count": 1,
+      "downgrade_reason": "支撑评论不足(1条)"
+    },
+    {
+      "id": 323,
+      "topic": "数据同步与Apple Watch兼容性问题",
+      "confidence": "low",
+      "sample_count": 1,
+      "downgrade_reason": "支撑评论不足(1条)"
+    },
+    {
+      "id": 324,
+      "topic": "订阅访问问题",
+      "confidence": "low",
+      "sample_count": 1,
+      "downgrade_reason": "支撑评论不足(1条)"
+    },
+    {
+      "id": 329,
+      "topic": "同步问题与客服无响应",
+      "confidence": "low",
+      "sample_count": 1,
+      "downgrade_reason": "支撑评论不足(1条)"
+    },
+    {
+      "id": 334,
+      "topic": "应用稳定性与技术支持响应慢",
+      "confidence": "low",
+      "sample_count": 1,
+      "downgrade_reason": "支撑评论不足(1条)"
+    }
+  ]
+}
