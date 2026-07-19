@@ -13,6 +13,7 @@ class TopicFinding(BaseModel):
     sample_count: int = Field(description="支撑评论数")
     representative_excerpts: list[str] = Field(description="代表性引文")
     contradicting_evidence: list[str] = Field(description="矛盾证据")
+    affected_versions: list[str] = Field(description="该话题涉及的 App 版本号列表（从评论中提取），如 [\"8.4.26\", \"8.4.25\"]")
 
 
 class AnalysisResult(BaseModel):
@@ -21,6 +22,7 @@ class AnalysisResult(BaseModel):
 
 PROMPT = ChatPromptTemplate.from_messages([
     ("system", "你是一个 App Store 评论分析师。从评论中动态发现用户关心的话题。\n"
+               "每条评论包含评分(★)、版本号[vX.Y.Z]、日期 字段，分析时请关注版本相关的趋势。\n"
                "对每个话题：\n"
                "  1. 命名 topic\n"
                "  2. 评估置信度 high/medium/low（≥5条支撑=high, ≥2条=medium）\n"
@@ -28,7 +30,8 @@ PROMPT = ChatPromptTemplate.from_messages([
                "  4. 列出支撑评论的ID\n"
                "  5. 摘录代表性引文\n"
                "  6. 列出矛盾证据（如果有相反观点的评论）\n"
-               "  7. 如果某个finding支撑评论<2条，confidence设为low"),
+               "  7. 如果某个finding支撑评论<2条，confidence设为low\n"
+               "  8. affected_versions 列出该话题涉及的 App 版本号（从评论中的版本字段提取），去重后按时间倒序"),
     ("human", "分析目标: {goal}\n\n评论数据:\n{reviews_text}"),
 ])
 
@@ -48,7 +51,8 @@ async def analyze_reviews(reviews: list[dict], llm, goal: str = "") -> list[dict
     for i in range(0, len(reviews), 50):
         block = reviews[i:i + 50]
         reviews_text = "\n---\n".join(
-            f"[ID:{r.get('review_id','?')}][{r.get('rating','?')}★] "
+            f"[ID:{r.get('review_id','?')}][{r.get('rating','?')}★]"
+            f"[v{r.get('version','?')}][{r.get('date','')}] "
             f"{r.get('title','')} {r.get('content','')}"
             for r in block
         )
@@ -68,6 +72,7 @@ async def analyze_reviews(reviews: list[dict], llm, goal: str = "") -> list[dict
                 "sample_count": f.sample_count,
                 "representative_excerpts": f.representative_excerpts,
                 "contradicting_evidence": f.contradicting_evidence,
+                "affected_versions": f.affected_versions,
                 "is_statistical": False,
                 "is_model_generated": True,
                 "was_downgraded": False,

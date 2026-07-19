@@ -108,6 +108,7 @@ class Finding(Base):
     sample_count = Column(Integer, default=0)
     representative_excerpts = Column(JSON, default=list)
     contradicting_evidence = Column(JSON, default=list)
+    affected_versions = Column(JSON, default=list)
     is_statistical = Column(Boolean, default=False)
     is_model_generated = Column(Boolean, default=True)
     was_downgraded = Column(Boolean, default=False)
