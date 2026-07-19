@@ -6,3 +6,4 @@ frontend/dist/
 *.pyc
 .claude/worktrees/
 demo/data/*.json
+.env

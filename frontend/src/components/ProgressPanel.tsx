@@ -16,7 +16,7 @@ interface ProgressPanelProps {
 }
 
 export function ProgressPanel({ task, events, connected }: ProgressPanelProps) {
-  const stages = ['scoping', 'collecting', 'cleaning', 'analyzing', 'planning', 'done']
+  const stages = ['scoping', 'collecting', 'cleaning', 'analyzing', 'planning', 'testgen', 'done']
 
   // 从 events 推断每个阶段的状态
   const stageStatus: Record<string, 'pending' | 'running' | 'completed' | 'failed'> = {}

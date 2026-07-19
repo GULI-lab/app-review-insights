@@ -11,6 +11,7 @@ const stageLabels: Record<string, string> = {
   cleaning: '清洗裁剪',
   analyzing: 'AI 分析',
   planning: '证据评估与 PRD',
+  testgen: '测试用例生成',
   done: '完成',
 }
 
