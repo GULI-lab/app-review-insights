@@ -24,7 +24,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, update
 
 from app.database import init_db, get_db
-from app.models.db import AnalysisTask, AnalysisEvent, RawReview, CleanedReview, Finding, Requirement, TestCase
+from app.models.db import AnalysisTask, AnalysisEvent, RawReview, CleanedReview, Finding, Requirement, TestCase, DataLimitation
 from app.models.schemas import TaskCreate, TaskResponse
 from app.event_manager import get_event_manager, EventManager
 from app.pipeline import run_pipeline
@@ -53,6 +53,12 @@ def _extract_app_id(url: str) -> str:
     return m.group(1) if m else ""
 
 
+def _extract_storefront(url: str) -> str:
+    """从 App Store URL 中提取国家代码（us/cn/jp 等），默认 us"""
+    m = re.search(r"apps\.apple\.com/([a-z]{2})/", url)
+    return m.group(1) if m else "us"
+
+
 # ---------- API 路由 ----------
 
 @app.post("/api/analysis/start", response_model=TaskResponse)
@@ -77,8 +83,10 @@ async def start_analysis(task_in: TaskCreate, db: AsyncSession = Depends(get_db)
     await db.commit()
     await db.refresh(task)
 
+    storefront = _extract_storefront(task_in.app_url)
+
     # 后台运行流水线
-    asyncio.create_task(run_pipeline(task.id, app_id, task_in.goal, max_pages=max_pages, sort=task_in.sort))
+    asyncio.create_task(run_pipeline(task.id, app_id, task_in.goal, max_pages=max_pages, sort=task_in.sort, storefront=storefront))
 
     return TaskResponse.model_validate(task)
 
@@ -98,6 +106,32 @@ async def list_tasks(db: AsyncSession = Depends(get_db)):
         "current_stage": t.current_stage,
         "created_at": t.created_at.isoformat() if t.created_at else None,
     } for t in result.scalars()]
+
+
+@app.delete("/api/analysis/{task_id}")
+async def delete_task(task_id: str, db: AsyncSession = Depends(get_db)):
+    """删除分析任务及其所有关联数据"""
+    from sqlalchemy import delete as sql_delete
+
+    # 检查任务是否存在
+    result = await db.execute(select(AnalysisTask).where(AnalysisTask.id == task_id))
+    task = result.scalar_one_or_none()
+    if not task:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    # 按依赖顺序删除关联数据
+    for table in [DataLimitation, TestCase, Requirement, Finding,
+                  CleanedReview, RawReview, AnalysisEvent]:
+        await db.execute(sql_delete(table).where(table.task_id == task_id))
+    await db.execute(sql_delete(AnalysisTask).where(AnalysisTask.id == task_id))
+    await db.commit()
+
+    # 清理事件管理器
+    from app.event_manager import _managers
+    _managers.pop(task_id, None)
+
+    return {"detail": "Task deleted", "task_id": task_id}
 
 
 @app.get("/api/analysis/{task_id}", response_model=TaskResponse)
@@ -208,6 +242,12 @@ async def get_review_stats(task_id: str, db: AsyncSession = Depends(get_db)):
             day = r.date[:10]
             daily[day] = daily.get(day, 0) + 1
 
+    # 评分×日期热力图数据
+    daily_by_rating: dict[tuple[str, int], int] = {}
+    for r in reviews:
+        if r.date:
+            daily_by_rating[(r.date[:10], r.rating)] = daily_by_rating.get((r.date[:10], r.rating), 0) + 1
+
     # 版本分布
     version_dist = {}
     for r in reviews:
@@ -221,9 +261,40 @@ async def get_review_stats(task_id: str, db: AsyncSession = Depends(get_db)):
         "daily_trend": [
             {"date": k, "count": v} for k, v in sorted(daily.items())
         ],
+        "daily_trend_by_rating": [
+            {"date": k[0], "rating": k[1], "count": v}
+            for k, v in sorted(daily_by_rating.items())
+        ],
         "version_distribution": [
             {"version": k, "count": v} for k, v in sorted(version_dist.items(), key=lambda x: -x[1])
         ],
+    }
+
+
+@app.get("/api/analysis/{task_id}/reviews/{review_id}")
+async def get_review_by_id(task_id: str, review_id: str, db: AsyncSession = Depends(get_db)):
+    """根据 review_id 查询单条评论详情"""
+    result = await db.execute(
+        select(CleanedReview).where(
+            CleanedReview.task_id == task_id,
+            CleanedReview.review_id == review_id,
+        )
+    )
+    r = result.scalar_one_or_none()
+    if not r:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Review not found")
+    return {
+        "id": r.id,
+        "review_id": r.review_id,
+        "source": r.source,
+        "title": r.title or "",
+        "content": r.content,
+        "rating": r.rating,
+        "author": r.author,
+        "version": r.version,
+        "date": r.date,
+        "quality_score": r.quality_score,
     }
 
 
@@ -241,6 +312,7 @@ async def get_findings(task_id: str, db: AsyncSession = Depends(get_db)):
         "sample_count": f.sample_count,
         "representative_excerpts": f.representative_excerpts or [],
         "contradicting_evidence": f.contradicting_evidence or [],
+        "affected_versions": f.affected_versions or [],
         "is_statistical": f.is_statistical,
         "is_model_generated": f.is_model_generated,
         "status": f.status,

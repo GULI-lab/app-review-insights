@@ -1,19 +1,22 @@
 """分析流水线编排 — 8 阶段（含 testgen）"""
 
-import asyncio
 import logging
 from sqlalchemy import select, update
 
 from app.database import async_session
 from app.config import get_llm
 from app.event_manager import get_event_manager
-from app.models.db import AnalysisTask, RawReview, CleanedReview, Finding, Requirement, TestCase, DataLimitation
+from app.models.db import AnalysisTask, RawReview, Finding, Requirement, TestCase, DataLimitation
 
 logger = logging.getLogger("pipeline")
 
 
-async def run_pipeline(task_id: str, app_id: str, goal: str, max_pages: int = 10, sort: str = "mostrecent"):
-    """执行完整分析流水线"""
+async def run_pipeline(task_id: str, app_id: str, goal: str, max_pages: int = 10, sort: str = "mostrecent", storefront: str = "us", skip_collection: bool = False):
+    """执行完整分析流水线
+
+    参数:
+      skip_collection: True 时跳过 RSS 采集阶段（用于导入数据后直接分析）
+    """
     em = get_event_manager(task_id)
 
     async with async_session() as db:
@@ -46,34 +49,43 @@ async def run_pipeline(task_id: str, app_id: str, goal: str, max_pages: int = 10
             await em.emit("stage_complete", "scoping", {}, db)
 
             # ====== 阶段 2: 数据采集 ======
-            await em.emit("stage_start", "collecting", {}, db)
-            await _update_task(db, task_id, current_stage="collecting", progress_pct=20)
+            if skip_collection:
+                # 导入模式：直接从 DB 读取 RawReview（import 写入的）
+                result = await db.execute(
+                    select(RawReview).where(RawReview.task_id == task_id)
+                )
+                raw_reviews = list(result.scalars().all())
+                await em.emit("stage_complete", "collecting", {"total": 0, "skipped": True}, db)
+            else:
+                await em.emit("stage_start", "collecting", {}, db)
+                await _update_task(db, task_id, current_stage="collecting", progress_pct=20)
 
-            rating_history = {r: 0 for r in range(1, 6)}
+                rating_history = {r: 0 for r in range(1, 6)}
 
-            async def on_page(page, page_reviews, total):
-                for rv in page_reviews:
-                    rating_history[rv["rating"]] = rating_history.get(rv["rating"], 0) + 1
-                await em.emit("stage_progress", "collecting", {
-                    "page": page,
-                    "total_pages": max_pages,
-                    "count": total,
-                    "rating_distribution": [
-                        {"rating": r, "count": rating_history.get(r, 0)}
-                        for r in range(1, 6)
-                    ],
-                })
+                async def on_page(page, page_reviews, total):
+                    for rv in page_reviews:
+                        rating_history[rv["rating"]] = rating_history.get(rv["rating"], 0) + 1
+                    await em.emit("stage_progress", "collecting", {
+                        "page": page,
+                        "total_pages": max_pages,
+                        "count": total,
+                        "rating_distribution": [
+                            {"rating": r, "count": rating_history.get(r, 0)}
+                            for r in range(1, 6)
+                        ],
+                    })
 
-            from app.services.collectors.rss import fetch_reviews
-            raw_reviews = await fetch_reviews(app_id, db, task_id, max_pages, sort=sort, on_progress=on_page)
-            await em.emit("stage_complete", "collecting", {"total": len(raw_reviews)}, db)
+                from app.services.collectors.rss import fetch_reviews
+                raw_reviews = await fetch_reviews(app_id, db, task_id, max_pages, sort=sort, storefront=storefront, on_progress=on_page)
+                await em.emit("stage_complete", "collecting", {"total": len(raw_reviews)}, db)
 
             # ====== 阶段 3: 清洗裁剪 ======
             await em.emit("stage_start", "cleaning", {}, db)
             await _update_task(db, task_id, current_stage="cleaning", progress_pct=40)
 
+            # 优先使用 AI cleaner 检测垃圾/广告，回退用规则检测
             from app.services.cleaner import clean_reviews
-            cleaned, stats = clean_reviews(raw_reviews, task_id)
+            cleaned, stats = await clean_reviews(raw_reviews, task_id, llm=llm)
             for cr in cleaned:
                 db.add(cr)
             await db.commit()
@@ -82,6 +94,7 @@ async def run_pipeline(task_id: str, app_id: str, goal: str, max_pages: int = 10
                 "output_count": stats.get("output_count", 0),
                 "invalid_filtered": stats.get("invalid_filtered", 0),
                 "ad_filtered": stats.get("ad_filtered", 0),
+                "ai_filtered": stats.get("ai_filtered", 0),
                 "duplicates_removed": stats.get("duplicates_removed", 0),
                 "avg_quality": stats.get("avg_quality", 0),
             }, db)
@@ -95,7 +108,10 @@ async def run_pipeline(task_id: str, app_id: str, goal: str, max_pages: int = 10
 
             review_dicts = [
                 {"review_id": r.review_id, "content": r.content,
-                 "title": r.title, "rating": r.rating}
+                 "title": r.title, "rating": r.rating,
+                 "version": r.version or "", "author": r.author or "",
+                 "date": (r.date[:10] if r.date else ""),
+                 "quality_score": round(r.quality_score or 0.5, 2)}
                 for r in cleaned
             ]
 
@@ -109,7 +125,7 @@ async def run_pipeline(task_id: str, app_id: str, goal: str, max_pages: int = 10
 
             for f_data in all_findings:
                 db.add(Finding(task_id=task_id, **f_data))
-            await db.flush()
+            await db.commit()
 
             # 统计各置信度等级
             confidence_dist = {"high": 0, "medium": 0, "low": 0}
