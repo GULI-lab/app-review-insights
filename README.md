@@ -126,6 +126,10 @@ cd backend
 
 # 方式一：uv（推荐）
 uv sync
+# 进入虚拟环境
+.venv/Scripts/activate      # Windows
+# source .venv/bin/activate        # macOS/Linux
+
 uv run uvicorn app.main:app --port 8000
 ```
 
