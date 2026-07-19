@@ -26,6 +26,7 @@ export interface ReviewItem {
 export interface ReviewStats {
   rating_distribution: { rating: number; count: number }[]
   daily_trend: { date: string; count: number }[]
+  daily_trend_by_rating: { date: string; rating: number; count: number }[]
   version_distribution: { version: string; count: number }[]
 }
 
@@ -34,10 +35,11 @@ export interface Finding {
   topic: string
   confidence: 'high' | 'medium' | 'low'
   description: string
-  supporting_review_ids: number[]
+  supporting_review_ids: string[]
   sample_count: number
   representative_excerpts: string[]
   contradicting_evidence: any[]
+  affected_versions: string[]
   is_statistical: boolean
   is_model_generated: boolean
   was_downgraded?: boolean

@@ -2,6 +2,11 @@ import type { AnalysisTask, ReviewItem, ReviewStats, Finding, Requirement, TestC
 
 const BASE = '/api'
 
+export async function deleteTask(taskId: string): Promise<void> {
+  const res = await fetch(`${BASE}/analysis/${taskId}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error('Delete failed')
+}
+
 export async function startAnalysis(app_url: string, goal: string, max_reviews = 200, sort = 'mostrecent'): Promise<AnalysisTask> {
   const res = await fetch(`${BASE}/analysis/start`, {
     method: 'POST',
@@ -24,6 +29,12 @@ export async function getReviews(
   const params = new URLSearchParams({ page: String(page) })
   if (rating) params.set('rating', String(rating))
   const res = await fetch(`${BASE}/analysis/${taskId}/reviews?${params}`)
+  return res.json()
+}
+
+export async function getReviewById(taskId: string, reviewId: string): Promise<ReviewItem> {
+  const res = await fetch(`${BASE}/analysis/${taskId}/reviews/${reviewId}`)
+  if (!res.ok) throw new Error('Review not found')
   return res.json()
 }
 

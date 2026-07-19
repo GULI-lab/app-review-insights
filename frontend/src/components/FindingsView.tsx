@@ -5,8 +5,8 @@
 import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { getFindings } from '@/api/client'
-import type { Finding } from '@/types'
+import { getFindings, getReviewById } from '@/api/client'
+import type { Finding, ReviewItem } from '@/types'
 
 interface FindingsViewProps {
   taskId: string
@@ -15,10 +15,25 @@ interface FindingsViewProps {
 export function FindingsView({ taskId }: FindingsViewProps) {
   const [findings, setFindings] = useState<Finding[]>([])
   const [loading, setLoading] = useState(true)
+  const [detailReview, setDetailReview] = useState<ReviewItem | null>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
 
   useEffect(() => {
     getFindings(taskId).then(setFindings).finally(() => setLoading(false))
   }, [taskId])
+
+  const openDetail = async (reviewId: string) => {
+    setDetailLoading(true)
+    setDetailReview(null)
+    try {
+      const data = await getReviewById(taskId, reviewId)
+      setDetailReview(data)
+    } catch {
+      setDetailReview(null)
+    } finally {
+      setDetailLoading(false)
+    }
+  }
 
   if (loading) return <div className="text-center py-8 text-gray-400">加载中...</div>
 
@@ -60,6 +75,9 @@ export function FindingsView({ taskId }: FindingsViewProps) {
           {/* 元信息 */}
           <div className="flex flex-wrap gap-3 text-xs text-gray-400 mt-3">
             <span>支撑样本: <strong>{f.sample_count}</strong> 条评论</span>
+            {f.affected_versions && f.affected_versions.length > 0 && (
+              <span>涉及版本: <strong>{f.affected_versions.join(', ')}</strong></span>
+            )}
             <span>来源: {f.is_model_generated ? 'AI 分析' : '统计'}</span>
             {f.is_statistical && <span className="text-blue-500">统计结论</span>}
             {f.was_downgraded && <span className="text-amber-500">⚠ 已降级: {f.downgrade_reason}</span>}
@@ -68,10 +86,20 @@ export function FindingsView({ taskId }: FindingsViewProps) {
 
           {/* 支撑评论 ID */}
           {f.supporting_review_ids.length > 0 && (
-            <div className="mt-3 text-xs text-gray-400">
+            <div className="mt-3 text-xs">
               <span className="font-medium text-gray-500">支撑评论 ID: </span>
-              {f.supporting_review_ids.slice(0, 10).join(', ')}
-              {f.supporting_review_ids.length > 10 && ` 等 ${f.supporting_review_ids.length} 条`}
+              <div className="flex flex-wrap gap-1 mt-1">
+                {f.supporting_review_ids.map((rid, i) => (
+                  <button
+                    key={i}
+                    className="px-1.5 py-0.5 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-800 rounded font-mono transition-colors cursor-pointer"
+                    onClick={() => openDetail(rid)}
+                    title="点击查看评论详情"
+                  >
+                    {rid}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -96,6 +124,48 @@ export function FindingsView({ taskId }: FindingsViewProps) {
           )}
         </Card>
       ))}
+
+      {/* 评论详情弹窗 */}
+      {detailReview && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setDetailReview(null)}>
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-800">评论详情</h3>
+              <button className="text-gray-400 hover:text-gray-600 text-xl" onClick={() => setDetailReview(null)}>✕</button>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="text-xl" style={{ color: ['#ef4444', '#f97316', '#eab308', '#86efac', '#22c55e'][detailReview.rating - 1] }}>
+                  {'★'.repeat(detailReview.rating)}{'☆'.repeat(5 - detailReview.rating)}
+                </span>
+                <span className="text-sm text-gray-500">{detailReview.author}</span>
+                <span className="text-xs text-gray-400">v{detailReview.version || '-'}</span>
+              </div>
+              <div className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+                ID: {detailReview.review_id}
+              </div>
+              {detailReview.title && (
+                <div className="text-sm font-medium text-gray-700">{detailReview.title}</div>
+              )}
+              <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+                {detailReview.content}
+              </div>
+              <div className="flex items-center justify-between text-xs text-gray-400 pt-2 border-t">
+                <span>{detailReview.date ? detailReview.date.slice(0, 10) : '-'}</span>
+                <span>来源: {detailReview.source}</span>
+                {detailReview.quality_score != null && (
+                  <span>质量分: {detailReview.quality_score}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {detailLoading && (
+        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg px-6 py-3 shadow-lg text-sm text-gray-600">加载中...</div>
+        </div>
+      )}
     </div>
   )
 }

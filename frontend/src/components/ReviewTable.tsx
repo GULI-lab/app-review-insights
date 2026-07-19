@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import ReactECharts from 'echarts-for-react'
-import { getReviews, getReviewStats } from '@/api/client'
+import { getReviews, getReviewStats, getReviewById } from '@/api/client'
 import type { ReviewItem, ReviewStats } from '@/types'
 
 const RATING_COLORS = ['#ef4444', '#f97316', '#eab308', '#86efac', '#22c55e']
@@ -29,6 +29,8 @@ export function ReviewTable({ taskId, mode }: ReviewTableProps) {
   const [search, setSearch] = useState('')
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
+  const [detailReview, setDetailReview] = useState<ReviewItem | null>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
 
   // 每 3 秒轮询一次（分析中时自动刷新）
   const loadData = useCallback(async () => {
@@ -59,8 +61,21 @@ export function ReviewTable({ taskId, mode }: ReviewTableProps) {
   }, [loadData])
 
   const filtered = search
-    ? reviews.filter(r => r.content.toLowerCase().includes(search.toLowerCase()))
+    ? reviews.filter(r => r.content.toLowerCase().includes(search.toLowerCase()) || r.review_id.includes(search))
     : reviews
+
+  const openDetail = async (reviewId: string) => {
+    setDetailLoading(true)
+    setDetailReview(null)
+    try {
+      const data = await getReviewById(taskId, reviewId)
+      setDetailReview(data)
+    } catch {
+      setDetailReview(null)
+    } finally {
+      setDetailLoading(false)
+    }
+  }
 
   const totalPages = Math.ceil(total / 20)
 
@@ -129,16 +144,15 @@ export function ReviewTable({ taskId, mode }: ReviewTableProps) {
 
   // 4. 评分×时间热力图
   const heatmapOption = stats && stats.daily_trend.length > 3 ? (() => {
-    // 构造 [日期索引, 评分-1, 数量] 数据
     const days = stats.daily_trend.map(d => d.date.slice(5))
-    // 因为没有按日*评分的细分数据，这里用每日的评分分布模拟
+    // 使用后端真实的 daily_trend_by_rating 数据
+    const trendByRating = stats.daily_trend_by_rating || []
     const heatData: [number, number, number][] = []
     days.forEach((_, di) => {
+      const fullDate = stats.daily_trend[di].date
       for (let ri = 0; ri < 5; ri++) {
-        // 用评分分布的平均值分配到各天
-        const ratingCount = stats.rating_distribution.find(x => x.rating === ri + 1)?.count || 0
-        const perDay = Math.round(ratingCount / Math.max(days.length, 1))
-        if (perDay > 0) heatData.push([di, ri, Math.max(1, perDay)])
+        const item = trendByRating.find(x => x.date === fullDate && x.rating === ri + 1)
+        if (item && item.count > 0) heatData.push([di, ri, item.count])
       }
     })
     return {
@@ -303,6 +317,7 @@ export function ReviewTable({ taskId, mode }: ReviewTableProps) {
           <TableHeader>
             <TableRow>
               <TableHead className="w-20">评分</TableHead>
+              <TableHead className="w-36">评论 ID</TableHead>
               <TableHead className="w-24">用户</TableHead>
               <TableHead>评论内容</TableHead>
               <TableHead className="w-20">版本</TableHead>
@@ -312,7 +327,7 @@ export function ReviewTable({ taskId, mode }: ReviewTableProps) {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-12">
+                <TableCell colSpan={6} className="text-center py-12">
                   <div className="text-gray-400">
                     {loading ? '加载中...' : total > 0 ? '没有匹配的评论' : '暂无评论数据，分析采集中...'}
                   </div>
@@ -324,6 +339,15 @@ export function ReviewTable({ taskId, mode }: ReviewTableProps) {
                   <span className="text-base" style={{ color: RATING_COLORS[r.rating - 1] }}>
                     {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}
                   </span>
+                </TableCell>
+                <TableCell>
+                  <button
+                    className="text-xs text-blue-500 hover:text-blue-700 hover:underline font-mono cursor-pointer"
+                    onClick={() => openDetail(r.review_id)}
+                    title="点击查看评论详情"
+                  >
+                    {r.review_id}
+                  </button>
                 </TableCell>
                 <TableCell className="text-sm text-gray-500 truncate max-w-[100px]">{r.author}</TableCell>
                 <TableCell>
@@ -349,6 +373,48 @@ export function ReviewTable({ taskId, mode }: ReviewTableProps) {
           </TableBody>
         </Table>
       </Card>
+
+      {/* 评论详情弹窗 */}
+      {detailReview && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => setDetailReview(null)}>
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-800">评论详情</h3>
+              <button className="text-gray-400 hover:text-gray-600 text-xl" onClick={() => setDetailReview(null)}>✕</button>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="text-xl" style={{ color: RATING_COLORS[detailReview.rating - 1] }}>
+                  {'★'.repeat(detailReview.rating)}{'☆'.repeat(5 - detailReview.rating)}
+                </span>
+                <span className="text-sm text-gray-500">{detailReview.author}</span>
+                <span className="text-xs text-gray-400">v{detailReview.version || '-'}</span>
+              </div>
+              <div className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+                ID: {detailReview.review_id}
+              </div>
+              {detailReview.title && (
+                <div className="text-sm font-medium text-gray-700">{detailReview.title}</div>
+              )}
+              <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+                {detailReview.content}
+              </div>
+              <div className="flex items-center justify-between text-xs text-gray-400 pt-2 border-t">
+                <span>{detailReview.date ? detailReview.date.slice(0, 10) : '-'}</span>
+                <span>来源: {detailReview.source}</span>
+                {detailReview.quality_score != null && (
+                  <span>质量分: {detailReview.quality_score}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {detailLoading && (
+        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg px-6 py-3 shadow-lg text-sm text-gray-600">加载中...</div>
+        </div>
+      )}
 
       {/* 分页 */}
       {total > 20 && (

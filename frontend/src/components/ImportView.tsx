@@ -201,7 +201,7 @@ export function ImportView({ onImportSuccess }: ImportViewProps) {
               </div>
               <p className="text-xs text-green-600 mt-1">
                 {taskMode === 'new'
-                  ? <>请复制任务 ID，在顶部输入框提交该 ID 查看分析结果</>
+                  ? <>导入成功，正在自动启动 AI 分析...</>
                   : '导入的数据已合并到该任务中，可刷新查看'}
               </p>
             </div>
@@ -217,18 +217,20 @@ export function ImportView({ onImportSuccess }: ImportViewProps) {
             <span className="font-medium text-gray-600">JSON 格式：</span>
             <pre className="mt-1 text-gray-500">{`[
   {
+    "review_id": "r12345",
     "content": "非常好用的 App",
     "rating": 5,
     "author": "user123",
+    "version": "8.4.26",
     "date": "2026-07-01"
   }
 ]`}</pre>
           </div>
           <div className="p-3 bg-gray-50 rounded">
             <span className="font-medium text-gray-600">CSV 格式：</span>
-            <pre className="mt-1 text-gray-500">{`content,rating,author,date
-非常好用的 App,5,user123,2026-07-01
-经常闪退,1,user456,2026-07-02`}</pre>
+            <pre className="mt-1 text-gray-500">{`content,rating,author,version,date
+非常好用的 App,5,user123,8.4.26,2026-07-01
+经常闪退,1,user456,8.4.25,2026-07-02`}</pre>
           </div>
         </div>
       </Card>
