@@ -20,26 +20,37 @@ export function ProgressPanel({ task, events, connected }: ProgressPanelProps) {
 
   // 从 events 推断每个阶段的状态
   const stageStatus: Record<string, 'pending' | 'running' | 'completed' | 'failed'> = {}
-  for (const s of stages) stageStatus[s] = 'pending'
 
+  // 1) 用 task.current_stage 做初始推断
+  const currentIdx = stages.indexOf(task.current_stage)
+  for (let i = 0; i < stages.length; i++) {
+    if (i < currentIdx) {
+      stageStatus[stages[i]] = 'completed'
+    } else if (i === currentIdx) {
+      stageStatus[stages[i]] = 'running'
+    } else {
+      stageStatus[stages[i]] = 'pending'
+    }
+  }
+  if (currentIdx === -1 && task.current_stage === 'done') {
+    for (const s of stages) stageStatus[s] = 'completed'
+  }
+
+  // 2) 用 SSE 事件增量覆盖（更精确）
   for (const s of stages) {
-    const hasStart = events.some(e => e.event === 'stage_start' && e.stage === s)
     const hasComplete = events.some(e => e.event === 'stage_complete' && e.stage === s)
     const hasError = events.some(e => e.event === 'stage_error' && e.stage === s)
     if (hasError) {
       stageStatus[s] = 'failed'
     } else if (hasComplete) {
       stageStatus[s] = 'completed'
-    } else if (hasStart) {
-      stageStatus[s] = 'running'
     }
   }
-
-  // 任务最终完成 → 所有没状态的阶段补 completed
-  if (task.status === 'completed') {
-    for (const s of stages) {
-      if (stageStatus[s] === 'pending') stageStatus[s] = 'completed'
-    }
+  // 来自 SSE 的实时 running（没有被 stage_complete 覆盖的 stage_start）
+  for (const s of stages) {
+    if (stageStatus[s] === 'completed') continue
+    const hasStart = events.some(e => e.event === 'stage_start' && e.stage === s)
+    if (hasStart) stageStatus[s] = 'running'
   }
 
   // ---- 采集阶段实时数据 ----
