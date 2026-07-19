@@ -26,12 +26,30 @@ _PERMISSIVE_SSL = ssl.create_default_context()
 _PERMISSIVE_SSL.check_hostname = False
 _PERMISSIVE_SSL.verify_mode = ssl.CERT_NONE
 
+# 真实浏览器 UA（自定义 UA 容易被 Apple 屏蔽）
+_BROWSER_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/120.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/json, text/javascript, */*; q=0.01",
+    "Accept-Language": "en-US,en;q=0.9",
+}
 
-def _build_url(app_id: str, page: int, sort: str = "mostrecent") -> str:
-    """构建 RSS Feed URL"""
+
+def _build_url(storefront: str, app_id: str, page: int, sort: str = "mostrecent") -> str:
+    """构建 RSS Feed URL
+
+    Apple 在 2026 年 7 月静默变更了 RSS Feed 路由：
+      旧格式（已失效）: /{storefront}/rss/customerreviews/...
+      新格式（可用）  : /rss/customerreviews/...?cc={storefront}
+    旧路径返回空 200 响应（静默屏蔽），需使用 cc 查询参数指定 storefront。
+    """
     return (
-        f"https://itunes.apple.com/us/rss/customerreviews/"
+        f"https://itunes.apple.com/rss/customerreviews/"
         f"page={page}/id={app_id}/sortby={sort}/json"
+        f"?cc={storefront}"
     )
 
 
@@ -48,19 +66,13 @@ def _fetch_page(url: str, timeout: int = 15) -> Optional[dict]:
         try:
             use_strict = (attempt == 0)
             ctx = ssl.create_default_context() if use_strict else _PERMISSIVE_SSL
-            req = urllib.request.Request(
-                url,
-                headers={
-                    "User-Agent": "AppReviewInsights/1.0 (RSS collector)",
-                    "Accept": "application/json",
-                },
-            )
+            req = urllib.request.Request(url, headers=_BROWSER_HEADERS)
             with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
                 if resp.status == 200:
                     return json.loads(resp.read().decode("utf-8"))
                 elif resp.status == 429:
-                    wait = 5 * (attempt + 1)
-                    logger.warning("HTTP 429, wait %ds", wait)
+                    wait = int(resp.headers.get("Retry-After", 5 * (attempt + 1)))
+                    logger.warning("HTTP 429, Retry-After=%ds", wait)
                     time.sleep(wait)
                     last_error = f"HTTP 429"
                     continue
@@ -71,6 +83,9 @@ def _fetch_page(url: str, timeout: int = 15) -> Optional[dict]:
             logger.warning("SSL error, retrying with relaxed mode")
             last_error = "SSL error"
             continue
+        except urllib.error.HTTPError as e:
+            logger.error("HTTP %d %s for %s", e.code, e.reason, url)
+            return None
         except urllib.error.URLError as e:
             last_error = str(e)
             if attempt < 2:
@@ -84,14 +99,31 @@ def _fetch_page(url: str, timeout: int = 15) -> Optional[dict]:
     return None
 
 
-def _extract_reviews(entries: list, fetch_page: int) -> list[dict]:
-    """从 RSS Feed entry 列表中提取评论字段"""
-    reviews = []
+def _extract_reviews(feed_data: dict, fetch_page: int) -> list[dict]:
+    """从 RSS Feed 中健壮地提取评论字段
 
+    注意: Apple RSS 在只有 1 条评论时 entry 是 dict 而非 list。
+    """
+    feed = feed_data.get("feed", {})
+    entries = feed.get("entry", [])
+    # 核心修复：单条评论时 entry 是字典，统一为列表
+    if isinstance(entries, dict):
+        entries = [entries]
+    if not entries:
+        return []
+
+    reviews = []
     for entry in entries:
+        if not isinstance(entry, dict):
+            continue
         # 没有 im:rating 的条目不是评论
         rating_label = entry.get("im:rating", {}).get("label")
         if rating_label is None:
+            continue
+
+        try:
+            rating = int(rating_label)
+        except (ValueError, TypeError):
             continue
 
         def _get(*keys):
@@ -108,7 +140,7 @@ def _extract_reviews(entries: list, fetch_page: int) -> list[dict]:
             "author": str(_get("author", "name", "label") or ""),
             "title": str(_get("title", "label") or ""),
             "content": str(_get("content", "label") or ""),
-            "rating": int(rating_label),
+            "rating": rating,
             "version": str(_get("im:version", "label") or "") or None,
             "date": str(_get("updated", "label") or "") or None,
             "fetch_page": fetch_page,
@@ -126,6 +158,7 @@ async def fetch_reviews(
     task_id: str,
     max_pages: int = 10,
     sort: str = "mostrecent",
+    storefront: str = "us",
     on_progress: Optional[Callable] = None,
 ) -> list[RawReview]:
     """分页抓取 RSS Feed，写入 DB，回调进度
@@ -136,6 +169,7 @@ async def fetch_reviews(
       task_id: 关联的分析任务 ID
       max_pages: 最大页数（每页50条）
       sort: 排序方式 mostrecent(最新) / mosthelpful(最有帮助)
+      storefront: 国家代码（us/cn/jp 等），反映 App Store 区域
       on_progress: 每页完成后的回调 (page, reviews, total)
 
     返回:
@@ -145,24 +179,53 @@ async def fetch_reviews(
 
     all_reviews: list[dict] = []
     orm_objects: list[RawReview] = []
+    consecutive_empty = 0  # 连续空页计数，用于检测限流
+    max_consecutive_empty = 3  # 最多容忍连续空页数
 
     for page in range(1, max_pages + 1):
-        url = _build_url(app_id, page, sort)
-        logger.info("Fetching page %d/%d", page, max_pages)
+        url = _build_url(storefront, app_id, page, sort)
+        logger.info("Fetching page %d/%d (storefront=%s)", page, max_pages, storefront)
 
         data = await asyncio.to_thread(_fetch_page, url)
         if data is None:
             logger.warning("Page %d failed, skipping", page)
             continue
 
-        feed = data.get("feed", {})
-        entries = feed.get("entry", [])
-        if not entries:
-            logger.info("Page %d empty, stopping pagination", page)
+        page_reviews = _extract_reviews(data, page)
+        if not page_reviews:
+            # 诊断：区分"无评论"还是"接口被限流屏蔽"
+            feed = data.get("feed", {})
+            has_entry_key = "entry" in feed
+            feed_keys = list(feed.keys())
+            logger.info(
+                "Page %d empty | has_entry_key=%s | feed_keys=%s | storefront=%s",
+                page, has_entry_key, feed_keys, storefront,
+            )
+            if not has_entry_key:
+                # 没有 entry 字段 = Apple 静默限流
+                consecutive_empty += 1
+                if consecutive_empty >= max_consecutive_empty:
+                    logger.warning(
+                        "Consecutive empty pages (%d), likely rate-limited by Apple. Stopping.",
+                        consecutive_empty,
+                    )
+                    break
+                if page == 1:
+                    logger.warning(
+                        "Storefront '%s' returned empty feed (no 'entry' field) — "
+                        "may be rate-limited or this app has no reviews in this region",
+                        storefront,
+                    )
+                # 指数退避：3s → 6s → 12s，等待限流解除
+                backoff = 3 * (2 ** (consecutive_empty - 1))
+                logger.info("Rate-limited, backing off %ds before retry...", backoff)
+                await asyncio.sleep(backoff)
+                continue
+            # 有 entry 字段但无评论 → 数据到底了
             break
 
-        page_reviews = _extract_reviews(entries, page)
         all_reviews.extend(page_reviews)
+        consecutive_empty = 0  # 成功获取评论后重置限流计数
 
         # 写入 DB
         for r in page_reviews:
@@ -190,6 +253,6 @@ async def fetch_reviews(
             await on_progress(page, page_reviews, len(all_reviews))
 
         if page < max_pages:
-            await asyncio.sleep(1.2)
+            await asyncio.sleep(3)
 
     return orm_objects

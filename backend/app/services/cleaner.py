@@ -9,11 +9,14 @@
   6. 质量评分
 """
 import re
+import logging
 from collections import Counter
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from app.models.db import RawReview, CleanedReview
+
+logger = logging.getLogger("cleaner")
 
 
 # ---------- 工具函数 ----------
@@ -75,6 +78,45 @@ def _sanitize(text: str) -> str:
     return text
 
 
+def dedup_cleaned(cleaned: List[CleanedReview]) -> Tuple[List[CleanedReview], dict]:
+    """对已入库的 CleanedReview 执行去重（不重新执行脱敏/无效/广告过滤）"""
+    stats = {"input_count": len(cleaned), "output_count": 0, "duplicates_removed": 0}
+    items = []
+    for r in cleaned:
+        items.append({
+            "obj": r, "content": r.content or "", "title": r.title or "",
+            "rating": r.rating, "author": r.author or "", "date": r.date or "",
+        })
+    kept = []
+    for item in items:
+        is_dup = False
+        for existing in kept:
+            if (item["author"] and existing["author"]
+                    and item["author"] == existing["author"]
+                    and item["rating"] == existing["rating"]):
+                try:
+                    d1 = item["date"][:10]
+                    d2 = existing["date"][:10]
+                    diff = abs((datetime.fromisoformat(d1) - datetime.fromisoformat(d2)).days)
+                    if diff > 3:
+                        continue
+                except (ValueError, TypeError, IndexError):
+                    continue
+                sim = _jaccard_similarity(
+                    item["title"] + item["content"],
+                    existing["title"] + existing["content"],
+                )
+                if sim > 0.9:
+                    is_dup = True
+                    stats["duplicates_removed"] += 1
+                    break
+        if not is_dup:
+            kept.append(item)
+    kept_objects = [item["obj"] for item in kept]
+    stats["output_count"] = len(kept_objects)
+    return kept_objects, stats
+
+
 def _quality_score(content: str, title: str) -> float:
     """0-1 质量评分"""
     score = 0.5
@@ -96,11 +138,15 @@ def _quality_score(content: str, title: str) -> float:
 
 # ---------- 主函数 ----------
 
-def clean_reviews(
+async def clean_reviews(
     raw_reviews: List[RawReview],
     task_id: str,
+    llm=None,
 ) -> Tuple[List[CleanedReview], dict]:
     """执行完整清洗流程
+
+    参数:
+      llm: 传入时启用 AI 广告/垃圾检测（异步），否则使用纯规则
 
     返回:
       (清理后的 CleanedReview 列表, 清洗统计)
@@ -109,6 +155,7 @@ def clean_reviews(
         "input_count": len(raw_reviews),
         "invalid_filtered": 0,
         "ad_filtered": 0,
+        "ai_filtered": 0,
         "duplicates_removed": 0,
         "output_count": 0,
     }
@@ -130,7 +177,7 @@ def clean_reviews(
         item["content"] = _sanitize(item["content"])
         item["title"] = _sanitize(item["title"])
 
-    # 3. 无效过滤
+    # 3. 无效过滤（规则）
     valid = []
     for item in items:
         is_inv, reason = _is_invalid(item["content"], item["title"])
@@ -139,7 +186,7 @@ def clean_reviews(
         else:
             valid.append(item)
 
-    # 4. 广告过滤
+    # 4. 广告过滤（规则）
     non_ad = []
     for item in valid:
         if _is_ad(item["content"]):
@@ -147,7 +194,14 @@ def clean_reviews(
         else:
             non_ad.append(item)
 
-    # 5. 重复检测
+    # 4b. AI 过滤（语义级别垃圾/广告/模板/机翻）
+    after_ai = non_ad
+    if llm is not None:
+        from app.services.ai_cleaner import ai_filter
+        after_ai, ai_removed = await ai_filter(non_ad, llm)
+        stats["ai_filtered"] = ai_removed
+
+    # 5. 重复检测（基于内容相似度）
     kept = []
     for item in non_ad:
         is_dup = False

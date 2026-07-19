@@ -88,6 +88,11 @@ def parse_args() -> argparse.Namespace:
         default="demo/data",
         help="输出目录，默认: demo/data",
     )
+    parser.add_argument(
+        "--storefront",
+        default="us",
+        help="App Store 国家代码（us/cn/jp 等），默认 us",
+    )
     return parser.parse_args()
 
 
@@ -96,18 +101,23 @@ def validate_app_id(app_id: str) -> bool:
     return bool(re.fullmatch(r"\d+", app_id))
 
 
-def build_rss_url(app_id: str, page: int, sort: str) -> str:
+def build_rss_url(app_id: str, page: int, sort: str, storefront: str = "us") -> str:
     """构建 RSS Feed API URL
 
     Apple RSS Feed 端点说明:
       - page: 页码，从 1 开始
       - id:   App Store 应用 ID（纯数字）
       - sort: mostrecent(最新) / mosthelpful(最有帮助)
+      - storefront: 国家代码（us/cn/jp 等），默认 us，通过 cc 查询参数指定
       - 响应格式: json
+
+    注意: Apple 在 2026 年 7 月静默变更了路由，旧路径 /{storefront}/rss/...
+    返回空 200 响应，需改用 /rss/...?cc={storefront} 格式。
     """
     return (
-        f"https://itunes.apple.com/us/rss/customerreviews/"
+        f"https://itunes.apple.com/rss/customerreviews/"
         f"page={page}/id={app_id}/sortby={sort}/json"
+        f"?cc={storefront}"
     )
 
 
@@ -378,7 +388,7 @@ def main():
     # 步骤 3: 逐页抓取
     # ----------------------------------------------------------
     for page in range(1, args.max_pages + 1):
-        url = build_rss_url(args.app_id, page, args.sort)
+        url = build_rss_url(args.app_id, page, args.sort, args.storefront)
         logger.info("正在抓取第 %d/%d 页...", page, args.max_pages)
 
         data = fetch_page(url)

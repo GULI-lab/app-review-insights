@@ -21,7 +21,7 @@ class MockChatDeepSeek(ChatDeepSeek):
 
     def __init__(self):
         super().__init__(
-            model="deepseek-chat",
+            model="deepseek-v4-flash",
             api_key="sk-mock",
             base_url="https://api.deepseek.com/v1",
         )

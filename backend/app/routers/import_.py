@@ -1,9 +1,10 @@
 """数据导入 API（JSON/CSV）"""
+import asyncio
 import csv, io, json, logging
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
-from app.models.db import CleanedReview
+from app.models.db import RawReview
 
 logger = logging.getLogger("import_api")
 
@@ -73,7 +74,7 @@ async def import_reviews(
             rating = int(row.get(mapping.get("rating", "") or 0))
             if not 1 <= rating <= 5:
                 continue
-            imported.append(CleanedReview(
+            imported.append(RawReview(
                 task_id=task_id,
                 review_id=row.get("review_id", ""),
                 author=row.get(mapping.get("author", ""), ""),
@@ -94,7 +95,7 @@ async def import_reviews(
             rating = int(item.get("rating", 0))
             if not 1 <= rating <= 5:
                 continue
-            imported.append(CleanedReview(
+            imported.append(RawReview(
                 task_id=task_id,
                 review_id=str(item.get("review_id", item.get("id", ""))),
                 author=item.get("author", ""),
@@ -109,5 +110,17 @@ async def import_reviews(
     for r in imported:
         db.add(r)
     await db.commit()
+
+    # 自动触发 pipeline（跳过采集阶段）
+    task.status = "running"
+    await db.commit()
+
+    from app.pipeline import run_pipeline
+    asyncio.create_task(run_pipeline(
+        task_id=task_id,
+        app_id=task.app_id,
+        goal=task.goal,
+        skip_collection=True,
+    ))
 
     return {"imported": len(imported), "task_id": task_id}
