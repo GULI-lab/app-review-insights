@@ -1,9 +1,43 @@
+# ─── Python ──────────────────────────────────────────────
 __pycache__/
-backend/.venv/
-backend/data/
-frontend/node_modules/
-frontend/dist/
 *.pyc
-.claude/worktrees/
-demo/data/*.json
+*.pyo
+*.egg-info/
+dist/
+*.egg
+.Python
+
+# ─── Virtualenv ──────────────────────────────────────────
+backend/.venv/
+backend/venv/
+backend/env/
+backend/.pytest_cache/
+
+# ─── Node.js ─────────────────────────────────────────────
+frontend/node_modules/
+frontend/.next/
+frontend/dist/
+
+# ─── Database ────────────────────────────────────────────
+!backend/data/.gitkeep
+
+# ─── Environment & Secrets ──────────────────────────────
 .env
+.env.local
+*.key
+
+# ─── IDE & Editor ───────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─── Claude ──────────────────────────────────────────────
+.claude/worktrees/
+
+# ─── Project-specific ────────────────────────────────────
+# Exclude large raw review caches, keep curated test data
+
